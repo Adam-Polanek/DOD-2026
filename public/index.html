@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trasa DOD</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..48,500..800&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --paper:#eef2f0; --card:#fff; --card2:#f6f9f7;
+    --ink:#15211d; --muted:#57675f; --line:#d7e0db;
+    --brand:#0d5c4a; --brand-ink:#0a4436;
+    --flag:#e2503a; --gold:#bd7d0d; --good:#2f9e44; --bad:#d1402c;
+    --t-historie:#0d5c4a; --t-chemie:#5648c8; --t-ekologie:#2f9e44; --t-finance:#c07a10; --t-volno:#e2503a;
+    --shadow:0 1px 2px rgba(18,40,32,.06), 0 8px 24px rgba(18,40,32,.07);
+    --r:16px;
+    color-scheme:light dark;
+    font-family:"Instrument Sans", system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+    --paper:#0e1512; --card:#16211d; --card2:#1b2823; --ink:#eef3f0; --muted:#9db0a8; --line:#293a34;
+    --brand:#39bfa0; --brand-ink:#8fe6cf; --flag:#ff6f57; --gold:#f0b53f; --good:#4fca6b; --bad:#ff6f57;
+    --t-historie:#39bfa0; --t-chemie:#8f83ef; --t-ekologie:#5fce7a; --t-finance:#e6a63a; --t-volno:#ff8067;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
+  }}
+  :root[data-theme="dark"]{
+    --paper:#0e1512; --card:#16211d; --card2:#1b2823; --ink:#eef3f0; --muted:#9db0a8; --line:#293a34;
+    --brand:#39bfa0; --brand-ink:#8fe6cf; --flag:#ff6f57; --gold:#f0b53f; --good:#4fca6b; --bad:#ff6f57;
+    --t-historie:#39bfa0; --t-chemie:#8f83ef; --t-ekologie:#5fce7a; --t-finance:#e6a63a; --t-volno:#ff8067;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;
+       padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0);}
+  img{max-width:100%;}
+  h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;margin:0;text-wrap:balance;letter-spacing:-.01em;}
+  button{font-family:inherit;}
+  .mono{font-family:"Space Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}
+  [hidden]{display:none!important;}
+
+  #app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+
+  .top{position:sticky;top:env(safe-area-inset-top,0);z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .top-in{display:flex;align-items:center;gap:12px;padding:10px 16px;}
+  .mark{width:34px;height:34px;border-radius:9px;background:var(--brand);display:grid;place-items:center;flex:0 0 auto;position:relative;}
+  .mark::after{content:"";position:absolute;width:11px;height:11px;background:var(--flag);border-radius:2px;transform:rotate(45deg);}
+  .top-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;line-height:1;}
+  .top-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.02em;text-transform:uppercase;}
+  .code-pill{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;}
+  .code-pill b{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.02em;}
+  .code-pill span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .pts{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;box-shadow:var(--shadow);}
+  .pts b{font-family:"Space Mono",monospace;font-size:14px;}
+  .pts span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  .theme-btn{background:none;border:1px solid var(--line);color:var(--muted);width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:14px;display:grid;place-items:center;}
+  .bar{height:4px;background:var(--line);}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--flag));width:0;transition:width .4s cubic-bezier(.2,.7,.3,1);}
+
+  .view{padding:20px 16px 40px;flex:1;animation:in .25s ease;}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.view{animation:none}.bar>i{transition:none}}
+
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;box-shadow:var(--shadow);}
+  .hero .ey{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--flag);}
+  .hero h1{font-size:29px;line-height:1.03;margin:12px 0 10px;font-weight:800;}
+  .hero p{color:var(--muted);font-size:15px;line-height:1.5;margin:0;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
+  .chip{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--ink);display:inline-flex;gap:6px;align-items:center;}
+  .how{margin-top:22px;display:grid;gap:10px;}
+  .how-row{display:flex;gap:13px;align-items:flex-start;}
+  .num{flex:0 0 auto;width:27px;height:27px;border-radius:8px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand-ink);font-family:"Space Mono",monospace;font-weight:700;font-size:13px;display:grid;place-items:center;}
+  :root[data-theme="dark"] .num,:root:not([data-theme="light"]) .num{color:var(--brand);}
+  .how-row p{margin:0;font-size:14px;line-height:1.45;}
+
+  .cta{width:100%;border:none;border-radius:14px;background:var(--brand);color:#fff;font-weight:700;font-size:16px;padding:16px;cursor:pointer;box-shadow:var(--shadow);transition:transform .08s;}
+  :root[data-theme="dark"] .cta,:root:not([data-theme="light"]) .cta{color:#06120e;}
+  .cta:active{transform:scale(.985);}
+  .cta[disabled]{opacity:.6;cursor:default;}
+  .cta.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
+  .cta.flag{background:var(--flag);color:#fff;}
+  .stick{position:sticky;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--paper) 34%);}
+
+  /* code reveal */
+  .codebox{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px 22px;box-shadow:var(--shadow);text-align:center;}
+  .codebox .lab{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .codebox .big{font-family:"Space Mono",monospace;font-weight:700;font-size:44px;letter-spacing:.04em;color:var(--brand-ink);margin:10px 0 6px;}
+  :root[data-theme="dark"] .codebox .big,:root:not([data-theme="light"]) .codebox .big{color:var(--brand);}
+  .codebox p{color:var(--muted);font-size:14px;line-height:1.5;margin:6px auto 0;max-width:34ch;}
+
+  .rhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
+  .rhead h2{font-size:20px;font-weight:700;}
+  .rhead .cnt{font-family:"Space Mono",monospace;font-size:13px;color:var(--muted);}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.4;}
+  .stations{display:grid;gap:11px;}
+  .st{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .08s;}
+  .st:active{transform:scale(.99);}
+  .st .badge{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;font-size:17px;background:var(--card2);border:1px solid var(--line);}
+  .st .badge.done{background:var(--good);color:#fff;border-color:transparent;}
+  .st .body{min-width:0;flex:1;}
+  .st .nm{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;line-height:1.15;}
+  .st .lo{font-size:12.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .st .rt{flex:0 0 auto;text-align:right;}
+  .tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
+  .st .earn{font-family:"Space Mono",monospace;font-size:12px;color:var(--good);margin-top:6px;font-weight:700;}
+  .st .arw{color:var(--muted);font-size:12px;margin-top:6px;}
+  .tag-historie{background:color-mix(in srgb,var(--t-historie) 15%,transparent);color:var(--t-historie);}
+  .tag-chemie{background:color-mix(in srgb,var(--t-chemie) 15%,transparent);color:var(--t-chemie);}
+  .tag-ekologie{background:color-mix(in srgb,var(--t-ekologie) 15%,transparent);color:var(--t-ekologie);}
+  .tag-finance{background:color-mix(in srgb,var(--t-finance) 15%,transparent);color:var(--t-finance);}
+  .tag-volno{background:color-mix(in srgb,var(--t-volno) 15%,transparent);color:var(--t-volno);}
+
+  .back{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0;display:inline-flex;gap:6px;align-items:center;margin-bottom:16px;}
+  .st-hd{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
+  .st-hd .badge{flex:0 0 auto;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;font-size:20px;color:#fff;}
+  .st-hd h2{font-size:22px;font-weight:800;line-height:1.05;}
+  .st-hd .lo{font-size:13px;color:var(--muted);margin-top:5px;}
+  .task{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
+  .task .lab{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flag);margin-bottom:7px;}
+  .task p{margin:0;font-size:14.5px;line-height:1.5;}
+
+  .q{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
+  .q .qn{font-size:11px;color:var(--muted);font-family:"Space Mono",monospace;margin-bottom:6px;}
+  .q .qt{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:16px;line-height:1.25;margin-bottom:14px;}
+  .opts{display:grid;gap:9px;}
+  .opt{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14.5px;cursor:pointer;color:var(--ink);transition:border-color .12s,background .12s;}
+  .opt .k{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center;font-family:"Space Mono",monospace;font-size:12px;font-weight:700;color:var(--muted);}
+  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);}
+  .opt.correct .k{background:var(--good);border-color:var(--good);color:#fff;}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);}
+  .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff;}
+  .opt[disabled]{cursor:default;}
+  .expl{margin-top:12px;font-size:13px;line-height:1.45;color:var(--muted);background:var(--card2);border-radius:10px;padding:11px 13px;border:1px solid var(--line);}
+  .expl b{color:var(--ink);}
+
+  .done-note{background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);border-radius:var(--r);padding:15px;text-align:center;margin-bottom:14px;}
+  .done-note .big{font-family:"Space Mono",monospace;font-size:26px;font-weight:700;color:var(--good);}
+  .done-note .sm{font-size:13px;color:var(--muted);margin-top:2px;}
+
+  .score-card{background:var(--brand);color:#fff;border-radius:22px;padding:26px 22px;text-align:center;box-shadow:var(--shadow);}
+  :root[data-theme="dark"] .score-card,:root:not([data-theme="light"]) .score-card{color:#06120e;}
+  .score-card .ey{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600;}
+  .score-card .n{font-family:"Space Mono",monospace;font-size:52px;font-weight:700;line-height:1;margin:10px 0 2px;}
+  .score-card .of{font-size:13px;opacity:.85;}
+  .score-card .rings{display:flex;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap;}
+  .score-card .ring{text-align:center;}
+  .score-card .ring b{font-family:"Space Mono",monospace;font-size:20px;display:block;}
+  .score-card .ring span{font-size:10.5px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
+  .prize{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;}
+  .prize .em{flex:0 0 auto;width:54px;height:54px;border-radius:14px;background:color-mix(in srgb,var(--gold) 16%,transparent);display:grid;place-items:center;font-size:26px;}
+  .prize .lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;}
+  .prize h3{font-size:17px;font-weight:700;margin:3px 0;}
+  .prize p{margin:0;font-size:13px;color:var(--muted);line-height:1.4;}
+
+  .fb{margin-top:22px;}
+  .fb h2{font-size:19px;font-weight:700;margin-bottom:4px;}
+  .field{margin-top:14px;}
+  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:8px;}
+  .stars{display:flex;gap:8px;}
+  .star{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:22px;cursor:pointer;display:grid;place-items:center;transition:transform .08s,border-color .12s,background .12s;color:var(--gold);}
+  .star.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);}
+  .star:active{transform:scale(.9);}
+  .segs{display:flex;gap:8px;flex-wrap:wrap;}
+  .seg{flex:1;min-width:80px;border:1.5px solid var(--line);background:var(--card);border-radius:11px;padding:11px 8px;font-size:13.5px;cursor:pointer;color:var(--ink);text-align:center;}
+  .seg.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink);font-weight:600;}
+  :root[data-theme="dark"] .seg.on,:root:not([data-theme="light"]) .seg.on{color:var(--brand);}
+  textarea{width:100%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;resize:vertical;min-height:64px;}
+  textarea:focus,.opt:focus-visible,.seg:focus-visible,.star:focus-visible,.cta:focus-visible,.st:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--flag);outline-offset:2px;}
+
+  .thanks{text-align:center;padding:26px 10px;}
+  .thanks .ic{width:70px;height:70px;border-radius:20px;background:color-mix(in srgb,var(--good) 15%,transparent);display:grid;place-items:center;margin:0 auto 16px;font-size:34px;}
+  .thanks h2{font-size:22px;font-weight:800;}
+  .thanks p{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px auto 0;max-width:38ch;}
+
+  .lb{display:grid;gap:8px;margin-top:6px;}
+  .lb-row{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;box-shadow:var(--shadow);}
+  .lb-row .pos{font-family:"Space Mono",monospace;font-weight:700;font-size:15px;width:26px;color:var(--muted);}
+  .lb-row.me{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,transparent);}
+  .lb-row .who{flex:1;font-weight:600;font-size:14px;}
+  .lb-row .pp{font-family:"Space Mono",monospace;font-weight:700;color:var(--brand-ink);}
+  :root[data-theme="dark"] .lb-row .pp,:root:not([data-theme="light"]) .lb-row .pp{color:var(--brand);}
+  .lb-row .medal{font-size:16px;}
+
+  .linkbtn{background:none;border:none;color:var(--flag);cursor:pointer;font:inherit;text-decoration:underline;padding:0;}
+  .orgline{margin-top:22px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5;}
+
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .loading{display:grid;place-items:center;min-height:60vh;color:var(--muted);gap:14px;}
+  .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="top-in">
+      <div class="mark" aria-hidden="true"></div>
+      <div>
+        <div class="top-title">Trasa DOD</div>
+        <div class="top-sub">Poznej okolí a historii</div>
+      </div>
+      <div class="pts" id="ptsWrap" hidden title="Získané body"><b class="mono" id="ptsNum">0</b><span>bodů</span></div>
+      <div class="code-pill" id="codeWrap" hidden><b class="mono" id="codeTop">—</b><span>tvůj kód</span></div>
+      <button class="theme-btn" id="themeBtn" title="Světlý/tmavý režim" aria-label="Přepnout režim">◐</button>
+    </div>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+
+  <section class="view" id="vLoad"><div class="loading"><div class="spinner"></div><div>Načítám trasu…</div></div></section>
+
+  <section class="view" id="vHome" hidden>
+    <div class="hero">
+      <div class="ey">Den otevřených dveří · 21. 11. 2026</div>
+      <h1>Poznej okolí a historii tvé budoucí školy</h1>
+      <p>Projdi si trasu deseti stanovišť po kampusu i okolí. Na každém tě čeká krátký úkol a kvíz — sbírej body a hraj o ceny od partnerů.</p>
+      <div class="meta">
+        <span class="chip">🚩 <b>10</b> stanovišť</span>
+        <span class="chip">⏱️ cca <b>60 min</b></span>
+        <span class="chip">🏆 až <b id="maxChip">1000</b> bodů</span>
+      </div>
+    </div>
+    <div class="how">
+      <div class="how-row"><div class="num">1</div><p><b>Klepni na „Spustit trasu“</b> — appka ti přidělí tvůj hrací kód.</p></div>
+      <div class="how-row"><div class="num">2</div><p><b>Na každém stanovišti</b> splň úkol a vyřeš kvíz. Za správné odpovědi máš body.</p></div>
+      <div class="how-row"><div class="num">3</div><p><b>Projdi všech 10</b> a na konci uvidíš skóre i své pořadí v žebříčku.</p></div>
+    </div>
+  </section>
+
+  <section class="view" id="vCode" hidden>
+    <div class="codebox">
+      <div class="lab">Tvůj hrací kód</div>
+      <div class="big mono" id="codeBig">DOD-••••</div>
+      <p><b>Zapiš si ho nebo vyfoť.</b> Slouží k tvému skóre v žebříčku a k vyzvednutí ceny u cíle. Postup se drží i v tomto telefonu.</p>
+    </div>
+  </section>
+
+  <section class="view" id="vRoute" hidden>
+    <div class="rhead"><h2>Tvoje trasa</h2><span class="cnt mono" id="routeCnt">0/10</span></div>
+    <p class="sub">Klepni na stanoviště, u kterého zrovna stojíš. Můžeš je plnit v libovolném pořadí.</p>
+    <div class="stations" id="stations"></div>
+    <p class="orgline">Máš hotovo, nebo končíš dřív? <button class="linkbtn" id="toFinish">Zobrazit skóre a žebříček →</button></p>
+  </section>
+
+  <section class="view" id="vStation" hidden>
+    <button class="back" id="stBack">← Zpět na trasu</button>
+    <div id="stContent"></div>
+  </section>
+
+  <section class="view" id="vFinish" hidden>
+    <button class="back" id="fnBack">← Zpět na trasu</button>
+    <div id="finishContent"></div>
+  </section>
+
+  <div class="stick" id="homeStick" hidden><button class="cta" id="startBtn">Spustit trasu 🚩</button></div>
+  <div class="stick" id="codeStick" hidden><button class="cta" id="codeGo">Mám kód, jdeme na to →</button></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const API = ""; // stejný původ jako server
+
+/* ---------- stav ---------- */
+let CFG = null;                 // konfigurace + stanoviště (bez odpovědí)
+let CODE = null;                // hrací kód
+let done = {};                  // { stationId: {points, correct} }
+let answers = {};               // { "stationId:qi": {chosen, correct, correctIndex, expl, points} }
+let points = 0;
+
+/* localStorage jen pro zapamatování kódu (pohodlí) */
+function saveCode(c){ try{ localStorage.setItem("dod-code", c); }catch(e){} }
+function loadCode(){ try{ return localStorage.getItem("dod-code"); }catch(e){ return null; } }
+function clearCode(){ try{ localStorage.removeItem("dod-code"); }catch(e){} }
+
+/* motiv (pohodlí) */
+try{ const t=localStorage.getItem("dod-theme"); if(t) document.documentElement.setAttribute("data-theme",t); }catch(e){}
+$("#themeBtn").addEventListener("click",()=>{
+  const cur=document.documentElement.getAttribute("data-theme");
+  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
+  const next=dark?"light":"dark";
+  document.documentElement.setAttribute("data-theme",next);
+  try{ localStorage.setItem("dod-theme",next);}catch(e){}
+});
+
+/* ---------- pomocníci ---------- */
+const views={load:$("#vLoad"),home:$("#vHome"),code:$("#vCode"),route:$("#vRoute"),station:$("#vStation"),finish:$("#vFinish")};
+function show(v){ for(const k in views) views[k].hidden=(k!==v);
+  $("#homeStick").hidden=(v!=="home"); $("#codeStick").hidden=(v!=="code"); window.scrollTo(0,0); }
+let toastT;
+function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
+const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+async function api(path, opts){
+  const r = await fetch(API+path, Object.assign({headers:{"Content-Type":"application/json"}}, opts));
+  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("Chyba "+r.status)); }
+  return r.json();
+}
+
+function station(id){ return CFG.stations.find(s=>s.id===id); }
+function recomputeTotals(){
+  points=0; done={};
+  for(const key in answers){ const a=answers[key]; points+=a.points;
+    const sid=key.split(":")[0]; (done[sid]=done[sid]||{points:0,correct:0}); done[sid].points+=a.points; done[sid].correct+=a.correct?1:0; }
+}
+function stationDone(id){ // splněno = zodpovězené všechny otázky stanoviště
+  const st=station(id); if(!st) return false;
+  return st.q.every((_,qi)=>(st.id+":"+qi) in answers);
+}
+function doneCount(){ return CFG.stations.filter(s=>stationDone(s.id)).length; }
+function updateHud(){
+  $("#ptsNum").textContent=points;
+  $("#routeCnt").textContent=doneCount()+"/"+CFG.stationCount;
+  $("#barFill").style.width=(doneCount()/CFG.stationCount*100)+"%";
+  $("#codeTop").textContent=CODE||"—";
+}
+
+/* ---------- trasa ---------- */
+function renderRoute(){
+  const wrap=$("#stations"); wrap.innerHTML="";
+  CFG.stations.forEach(st=>{
+    const isDone=stationDone(st.id);
+    const earned=done[st.id]?done[st.id].points:0;
+    const btn=document.createElement("button"); btn.className="st"; btn.type="button";
+    btn.innerHTML=`
+      <div class="badge ${isDone?'done':''}" style="${isDone?'':'color:var(--t-'+st.theme+')'}">${isDone?'✓':st.num}</div>
+      <div class="body"><div class="nm">${st.name}</div><div class="lo">📍 ${st.loc}</div></div>
+      <div class="rt"><span class="tag tag-${st.theme}">${CFG.themeLabels[st.theme]}</span>
+        ${isDone?`<div class="earn">+${earned} b</div>`:`<div class="arw">Otevřít →</div>`}</div>`;
+    btn.addEventListener("click",()=>openStation(st.id));
+    wrap.appendChild(btn);
+  });
+  updateHud();
+}
+
+/* ---------- stanoviště ---------- */
+let current=null;
+function openStation(id){
+  current=station(id);
+  const c=$("#stContent"); const tv="--t-"+current.theme;
+  let html=`
+    <div class="st-hd">
+      <div class="badge" style="background:var(${tv})">${current.num}</div>
+      <div><span class="tag tag-${current.theme}">${CFG.themeLabels[current.theme]}</span>
+        <h2 style="margin-top:8px">${current.name}</h2><div class="lo">📍 ${current.loc}</div></div>
+    </div>
+    <div class="task"><div class="lab">Úkol na místě</div><p>${current.task}</p></div>`;
+  current.q.forEach((q,qi)=>{
+    html+=`<div class="q" data-qi="${qi}"><div class="qn">Otázka ${qi+1} z ${current.q.length}</div>
+      <div class="qt">${q.t}</div><div class="opts">`;
+    q.opts.forEach((o,oi)=>{ html+=`<button class="opt" data-oi="${oi}" type="button"><span class="k">${String.fromCharCode(65+oi)}</span><span>${o}</span></button>`; });
+    html+=`</div><div class="expl" hidden></div></div>`;
+  });
+  html+=`<button class="cta" id="stDone" hidden>Hotovo, zpět na trasu →</button>`;
+  c.innerHTML=html;
+
+  c.querySelectorAll(".q").forEach(qEl=>{
+    const qi=+qEl.dataset.qi;
+    const optEls=qEl.querySelectorAll(".opt");
+    const explEl=qEl.querySelector(".expl");
+    const key=current.id+":"+qi;
+    const prev=answers[key];
+    if(prev){ paintAnswer(optEls,explEl,prev.chosen,prev.correctIndex,prev.correct,prev.expl); }
+    else{
+      optEls.forEach((el,oi)=>el.addEventListener("click",()=>submitAnswer(current.id,qi,oi,optEls,explEl)));
+    }
+  });
+  if(stationDone(current.id)) $("#stDone").hidden=false;
+  $("#stDone").onclick=()=>{ renderRoute(); show("route"); };
+  show("station");
+}
+
+function paintAnswer(optEls,explEl,chosen,correctIndex,correct,expl){
+  optEls.forEach((el,oi)=>{ el.disabled=true;
+    if(oi===correctIndex) el.classList.add("correct");
+    if(oi===chosen && !correct) el.classList.add("wrong"); });
+  explEl.hidden=false;
+  explEl.innerHTML=(correct?"<b>Správně!</b> ":"<b>Správná odpověď: "+String.fromCharCode(65+correctIndex)+".</b> ")+expl;
+}
+
+async function submitAnswer(sid,qi,chosen,optEls,explEl){
+  optEls.forEach(el=>el.disabled=true);
+  try{
+    const res=await api("/api/answer",{method:"POST",body:JSON.stringify({code:CODE,station:sid,q:qi,chosen})});
+    answers[sid+":"+qi]={chosen,correct:res.correct,correctIndex:res.correctIndex,expl:res.expl,points:res.points};
+    recomputeTotals(); updateHud();
+    paintAnswer(optEls,explEl,chosen,res.correctIndex,res.correct,res.expl);
+    if(res.scored && res.points>0) toast("+"+res.points+" bodů");
+    if(stationDone(sid)){
+      const btn=$("#stDone"); btn.hidden=false;
+      if(doneCount()===CFG.stationCount){ btn.textContent="Dokončit trasu – zobrazit skóre 🏆"; btn.classList.add("flag"); btn.onclick=openFinish; }
+    }
+  }catch(e){
+    optEls.forEach(el=>el.disabled=false);
+    toast("⚠️ "+e.message+" — zkus to znovu");
+  }
+}
+
+/* ---------- cíl ---------- */
+function prizeFor(pct){
+  if(pct>=0.8) return {em:"🏆",lab:"Hlavní cena",h:"Poukaz od Alzy",p:"Skvělý výkon! Ukaž svůj kód u cílového stanoviště a vyzvedni si hlavní odměnu partnera."};
+  if(pct>=0.5) return {em:"☕",lab:"Odměna",h:"Káva v kavárně Na Zastávce",p:"Dobrá práce! U cíle si podle kódu vyzvedni poukaz na kávu a drobnost."};
+  return {em:"🎒",lab:"Za účast",h:"Účastnická drobnost",p:"Díky, že ses zúčastnil/a! U cíle na tebe podle kódu čeká malá pozornost."};
+}
+async function openFinish(){
+  show("finish");
+  $("#finishContent").innerHTML=`<div class="loading"><div class="spinner"></div><div>Počítám výsledky…</div></div>`;
+  let fin;
+  try{ fin=await api("/api/finish",{method:"POST",body:JSON.stringify({code:CODE})}); }
+  catch(e){ $("#finishContent").innerHTML=`<p class="sub">⚠️ ${e.message}</p><button class="cta" onclick="location.reload()">Zkusit znovu</button>`; return; }
+  const pct=fin.maxPoints?fin.points/fin.maxPoints:0;
+  const pr=prizeFor(pct);
+  let lb=[];
+  try{ const r=await api("/api/leaderboard"); lb=r.board; }catch(e){}
+
+  let html=`
+    <div class="score-card">
+      <div class="ey">Tvoje skóre${fin.rank?` · ${fin.rank}. místo`:""}</div>
+      <div class="n mono">${fin.points}</div><div class="of">z ${fin.maxPoints} možných bodů</div>
+      <div class="rings">
+        <div class="ring"><b class="mono">${fin.stationsDone}/${CFG.stationCount}</b><span>stanovišť</span></div>
+        <div class="ring"><b class="mono">${Math.round(pct*100)}%</b><span>úspěšnost</span></div>
+        ${fin.rank?`<div class="ring"><b class="mono">${fin.rank}. / ${fin.totalPlayers}</b><span>pořadí</span></div>`:""}
+      </div>
+    </div>
+    <div class="prize"><div class="em">${pr.em}</div>
+      <div><div class="lab">${pr.lab}</div><h3>${pr.h}</h3><p>${pr.p}</p></div></div>`;
+
+  if(lb.length){
+    html+=`<h2 style="font-size:18px;margin:24px 0 4px">🏆 Žebříček — TOP ${lb.length}</h2>
+      <p class="sub">Aktuální pořadí všech hráčů.</p><div class="lb">`;
+    lb.forEach(r=>{ const me=(r.name===CODE);
+      const medal=r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"";
+      html+=`<div class="lb-row ${me?'me':''}"><span class="pos">${r.rank}.</span>
+        <span class="who">${r.name}${me?" (ty)":""} ${medal?`<span class="medal">${medal}</span>`:""}</span>
+        <span class="pp">${r.points} b</span></div>`; });
+    html+=`</div>`;
+  }
+
+  html+=`<div id="fbSlot"></div>`;
+  $("#finishContent").innerHTML=html;
+  renderFeedback();
+}
+
+function renderFeedback(){
+  const slot=$("#fbSlot");
+  slot.innerHTML=`
+    <div class="fb"><h2>Jak se ti trasa líbila?</h2>
+      <p class="sub">Pomoz nám akci příště vylepšit — zabere to půl minuty.</p>
+      <div class="field"><label>Celková spokojenost</label>
+        <div class="stars" id="stars">${[1,2,3,4,5].map(n=>`<button class="star" type="button" data-n="${n}" aria-label="${n} z 5">★</button>`).join("")}</div></div>
+      <div class="field"><label>Doporučil/a bys DOD kamarádovi?</label>
+        <div class="segs" id="rec">
+          <button class="seg" type="button" data-v="Určitě ano">Určitě ano</button>
+          <button class="seg" type="button" data-v="Spíš ano">Spíš ano</button>
+          <button class="seg" type="button" data-v="Spíš ne">Spíš ne</button></div></div>
+      <div class="field"><label for="fbBest">Co tě nejvíc bavilo?</label><textarea id="fbBest" placeholder="Např. chemický pokus, kavárna…"></textarea></div>
+      <div class="field"><label for="fbImprove">Co bychom měli zlepšit?</label><textarea id="fbImprove" placeholder="Napiš cokoli, co ti chybělo…"></textarea></div>
+      <button class="cta" id="fbSend" style="margin-top:18px">Odeslat hodnocení</button>
+    </div>
+    <p class="orgline">Díky za zpětnou vazbu i za účast. Užij si zbytek dne otevřených dveří! 💚</p>`;
+  let rating=0, rec="";
+  slot.querySelectorAll("#stars .star").forEach(s=>s.addEventListener("click",()=>{ rating=+s.dataset.n;
+    slot.querySelectorAll("#stars .star").forEach(x=>x.classList.toggle("on",+x.dataset.n<=rating)); }));
+  slot.querySelectorAll("#rec .seg").forEach(b=>b.addEventListener("click",()=>{ rec=b.dataset.v;
+    slot.querySelectorAll("#rec .seg").forEach(x=>x.classList.toggle("on",x===b)); }));
+  $("#fbSend").addEventListener("click",async()=>{
+    if(!rating){ toast("Vyber prosím počet hvězd ★"); return; }
+    const btn=$("#fbSend"); btn.disabled=true; btn.textContent="Odesílám…";
+    try{
+      await api("/api/feedback",{method:"POST",body:JSON.stringify({code:CODE,rating,recommend:rec,best:$("#fbBest").value.trim(),improve:$("#fbImprove").value.trim()})});
+      slot.innerHTML=`<div class="thanks"><div class="ic">💚</div><h2>Zpětná vazba odeslána</h2><p>Díky! Tvoje hodnocení už máme. Užij si zbytek dne otevřených dveří.</p></div>`;
+      toast("Děkujeme za hodnocení! 💚");
+    }catch(e){ btn.disabled=false; btn.textContent="Odeslat hodnocení"; toast("⚠️ "+e.message); }
+  });
+}
+
+/* ---------- navigace ---------- */
+$("#startBtn").addEventListener("click",async()=>{
+  const btn=$("#startBtn"); btn.disabled=true; btn.textContent="Připravuji…";
+  try{
+    const r=await api("/api/register",{method:"POST",body:JSON.stringify({})});
+    CODE=r.code; saveCode(CODE);
+    $("#codeBig").textContent=CODE; $("#codeWrap").hidden=false; $("#ptsWrap").hidden=false;
+    updateHud(); show("code");
+  }catch(e){ toast("⚠️ "+e.message); btn.disabled=false; btn.textContent="Spustit trasu 🚩"; }
+});
+$("#codeGo").addEventListener("click",()=>{ renderRoute(); show("route"); });
+$("#stBack").addEventListener("click",()=>{ renderRoute(); show("route"); });
+$("#fnBack").addEventListener("click",()=>{ renderRoute(); show("route"); });
+$("#toFinish").addEventListener("click",openFinish);
+
+/* ---------- start ---------- */
+async function boot(){
+  try{ CFG=await api("/api/config"); }
+  catch(e){ $("#vLoad").innerHTML=`<div class="loading"><div>⚠️ Nepodařilo se načíst trasu.</div><button class="cta" onclick="location.reload()" style="max-width:200px">Zkusit znovu</button></div>`; return; }
+  $("#maxChip").textContent=CFG.maxPoints;
+
+  const saved=loadCode();
+  if(saved){
+    try{
+      const me=await api("/api/me/"+saved);
+      CODE=saved;
+      me.answers.forEach(a=>{ answers[a.station+":"+a.q]={chosen:a.chosen,correct:a.correct,correctIndex:a.correctIndex,expl:a.expl,points:a.points}; });
+      recomputeTotals();
+      $("#codeWrap").hidden=false; $("#ptsWrap").hidden=false; updateHud(); renderRoute();
+      show("route"); return;
+    }catch(e){ clearCode(); } // server neúčastníka nezná (např. čistá DB) → nový start
+  }
+  show("home");
+}
+boot();
+</script>
+</body>
+</html>

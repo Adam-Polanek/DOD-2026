@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DOD – Admin přehled</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..48,600..800&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root{
+    --paper:#0f1613; --panel:#17211d; --panel2:#1d2925; --ink:#eef3f0; --muted:#93a49c; --line:#2a3a34;
+    --brand:#39bfa0; --flag:#ff7a5f; --gold:#f0b53f; --good:#4fca6b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.45);
+    color-scheme:dark; font-family:"Instrument Sans",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#16241f,var(--paper));color:var(--ink);
+       min-height:100vh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);}
+  h1,h2{font-family:"Bricolage Grotesque",sans-serif;margin:0;letter-spacing:-.01em;}
+  .mono{font-family:"Space Mono",monospace;font-variant-numeric:tabular-nums;}
+  .wrap{max-width:900px;margin:0 auto;padding:22px 18px 60px;}
+
+  /* login */
+  .gate{max-width:380px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 26px;box-shadow:var(--shadow);}
+  .gate .mk{width:44px;height:44px;border-radius:12px;background:var(--brand);position:relative;margin-bottom:16px;}
+  .gate .mk::after{content:"";position:absolute;inset:0;margin:auto;width:15px;height:15px;background:var(--flag);border-radius:3px;transform:rotate(45deg);}
+  .gate h1{font-size:22px;font-weight:800;}
+  .gate p{color:var(--muted);font-size:14px;line-height:1.5;margin:8px 0 18px;}
+  .gate input{width:100%;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;color:var(--ink);padding:13px 14px;font-family:"Space Mono",monospace;font-size:15px;}
+  .gate button{width:100%;margin-top:12px;border:none;border-radius:12px;background:var(--brand);color:#04120e;font-weight:700;font-size:15px;padding:14px;cursor:pointer;}
+  .err{color:var(--flag);font-size:13px;margin-top:10px;min-height:1em;}
+
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
+  header h1{font-size:24px;font-weight:800;}
+  header .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:999px;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:pulse 2s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  header .sp{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:11px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
+  .btn.primary{background:var(--brand);color:#04120e;border-color:transparent;}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
+  .stat b{font-family:"Space Mono",monospace;font-size:30px;display:block;line-height:1;}
+  .stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+
+  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
+  th,td{padding:12px 14px;text-align:left;font-size:14px;border-bottom:1px solid var(--line);}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--panel2);}
+  tr:last-child td{border-bottom:none;}
+  td.n,th.n{text-align:right;font-family:"Space Mono",monospace;}
+  .pos{font-family:"Space Mono",monospace;font-weight:700;color:var(--muted);}
+  .top1 .pos{color:var(--gold);} .top2 .pos,.top3 .pos{color:var(--ink);}
+  .pp{font-family:"Space Mono",monospace;font-weight:700;color:var(--brand);}
+  .code{font-family:"Space Mono",monospace;color:var(--muted);font-size:12.5px;}
+  .empty{color:var(--muted);text-align:center;padding:40px;}
+  .foot{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="gate" class="gate">
+  <div class="mk"></div>
+  <h1>Admin přehled</h1>
+  <p>Zadej admin token (nastavený v proměnné <span class="mono">ADMIN_TOKEN</span> na serveru).</p>
+  <input id="token" type="password" placeholder="admin token" autocomplete="current-password">
+  <button id="enter">Vstoupit</button>
+  <div class="err" id="err"></div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash" class="wrap" hidden>
+  <header>
+    <h1>🚩 Trasa DOD — žebříček</h1>
+    <span class="live"><span class="dot"></span> živě · obnovuje se každých 10 s</span>
+    <div class="sp">
+      <a class="btn" id="exportBtn" href="#" download>⬇︎ Export CSV (Excel)</a>
+      <button class="btn primary" id="refreshBtn">Obnovit teď</button>
+    </div>
+  </header>
+  <div class="stats">
+    <div class="stat"><b class="mono" id="sTotal">0</b><span>účastníků</span></div>
+    <div class="stat"><b class="mono" id="sFinished">0</b><span>dokončilo trasu</span></div>
+    <div class="stat"><b class="mono" id="sMax">0</b><span>max bodů</span></div>
+  </div>
+  <table>
+    <thead><tr><th style="width:60px">Pořadí</th><th>Hráč</th><th class="n">Body</th><th class="n">Stanovišť</th><th class="n">Správně</th><th>Dokončeno</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="6" class="empty">Načítám…</td></tr></tbody>
+  </table>
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+let TOKEN=null, timer=null;
+
+function fmtTime(iso){ if(!iso) return "—"; const d=new Date(iso);
+  return d.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"}); }
+
+async function load(){
+  try{
+    const r=await fetch("/api/admin/leaderboard?token="+encodeURIComponent(TOKEN));
+    if(r.status===401){ fail("Neplatný token."); return false; }
+    const j=await r.json();
+    $("#sTotal").textContent=j.stats.total;
+    $("#sFinished").textContent=j.stats.finished;
+    $("#sMax").textContent=j.maxPoints;
+    const rows=$("#rows");
+    if(!j.board.length){ rows.innerHTML=`<tr><td colspan="6" class="empty">Zatím žádní účastníci. Jakmile někdo spustí trasu, objeví se tu.</td></tr>`; }
+    else{
+      rows.innerHTML=j.board.map((r,i)=>{
+        const pos=i+1; const medal=pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":"";
+        const cls=pos<=3?("top"+pos):"";
+        const name=r.nickname?`${r.nickname} <span class="code">${r.code}</span>`:`<span class="code">${r.code}</span>`;
+        return `<tr class="${cls}"><td class="pos">${pos}. ${medal}</td><td>${name}</td>
+          <td class="n pp">${r.points}</td><td class="n">${r.stations}</td><td class="n">${r.correct_answers}</td>
+          <td>${r.finished_at?fmtTime(r.finished_at):'<span style="color:var(--muted)">probíhá</span>'}</td></tr>`;
+      }).join("");
+    }
+    $("#foot").textContent="Poslední aktualizace "+new Date().toLocaleTimeString("cs-CZ");
+    return true;
+  }catch(e){ $("#foot").textContent="⚠️ Chyba spojení se serverem."; return true; }
+}
+function fail(msg){ $("#err").textContent=msg; $("#gate").hidden=false; $("#dash").hidden=true; if(timer) clearInterval(timer); }
+
+async function enter(){
+  TOKEN=$("#token").value.trim();
+  if(!TOKEN){ $("#err").textContent="Zadej token."; return; }
+  $("#err").textContent="";
+  $("#exportBtn").href="/api/admin/export.csv?token="+encodeURIComponent(TOKEN);
+  $("#gate").hidden=true; $("#dash").hidden=false;
+  const ok=await load();          // vrátí false jen při 401 → fail() vrátí zpět na login
+  if(!ok) return;
+  try{ sessionStorage.setItem("dod-admin",TOKEN); }catch(e){}
+  if(timer) clearInterval(timer); timer=setInterval(load,10000);
+}
+$("#enter").addEventListener("click",enter);
+$("#token").addEventListener("keydown",e=>{ if(e.key==="Enter") enter(); });
+$("#refreshBtn").addEventListener("click",load);
+
+// auto-login v rámci relace
+try{ const t=sessionStorage.getItem("dod-admin"); if(t){ $("#token").value=t; enter(); } }catch(e){}
+</script>
+</body>
+</html>
