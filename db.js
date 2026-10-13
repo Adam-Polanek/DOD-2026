@@ -1,6 +1,7 @@
 // ---------------------------------------------------------------------------
 //  Datová vrstva nad vestavěnou SQLite (Node 22+). Žádné nativní závislosti.
-//  Vše je schované tady, takže jde databázi v budoucnu vyměnit beze změn v API.
+//  Ukládají se jen „fakta": kdo hraje, která stanoviště odemkl a co zvolil.
+//  Peníze a typ hráče se z toho počítají v game.js.
 // ---------------------------------------------------------------------------
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
@@ -19,15 +20,23 @@ db.exec(`
     created_at   TEXT NOT NULL,
     finished_at  TEXT
   );
-  CREATE TABLE IF NOT EXISTS answers (
+  -- Odemčená stanoviště. kind = 'arrive' (QR na místě) nebo 'task' (QR od obsluhy).
+  CREATE TABLE IF NOT EXISTS unlocks (
     code        TEXT NOT NULL,
     station_id  TEXT NOT NULL,
-    q_index     INTEGER NOT NULL,
-    chosen      INTEGER NOT NULL,
-    correct     INTEGER NOT NULL,
-    points      INTEGER NOT NULL,
+    kind        TEXT NOT NULL,
     created_at  TEXT NOT NULL,
-    PRIMARY KEY (code, station_id, q_index)   -- pojistka proti dvojímu bodování
+    PRIMARY KEY (code, station_id, kind)
+  );
+  -- Volby hráče. Na každém stanovišti platí jen PRVNÍ volba (pojistka proti
+  -- opakování). success = výsledek podnikání (1/0), u ostatních NULL.
+  CREATE TABLE IF NOT EXISTS choices (
+    code        TEXT NOT NULL,
+    station_id  TEXT NOT NULL,
+    choice      INTEGER NOT NULL,
+    success     INTEGER,
+    created_at  TEXT NOT NULL,
+    PRIMARY KEY (code, station_id)
   );
   CREATE TABLE IF NOT EXISTS feedback (
     code        TEXT PRIMARY KEY,
@@ -46,7 +55,10 @@ const stmtInsertParticipant = db.prepare(
   "INSERT INTO participants (code, nickname, created_at) VALUES (?, ?, ?)"
 );
 const stmtGetParticipant = db.prepare("SELECT * FROM participants WHERE code = ?");
-const stmtFinish = db.prepare("UPDATE participants SET finished_at = ? WHERE code = ?");
+const stmtAllParticipants = db.prepare("SELECT * FROM participants ORDER BY created_at");
+const stmtFinish = db.prepare(
+  "UPDATE participants SET finished_at = COALESCE(finished_at, ?) WHERE code = ?"
+);
 
 export function createParticipant(code, nickname = null) {
   stmtInsertParticipant.run(code, nickname, nowIso());
@@ -55,32 +67,46 @@ export function createParticipant(code, nickname = null) {
 export function getParticipant(code) {
   return stmtGetParticipant.get(code) || null;
 }
+export function allParticipants() {
+  return stmtAllParticipants.all();
+}
 export function finishParticipant(code) {
   stmtFinish.run(nowIso(), code);
 }
 
-// ---- Odpovědi --------------------------------------------------------------
-// INSERT OR IGNORE + kontrola changes(): první odpověď na danou otázku se
-// zaznamená a boduje, opakované pokusy se ignorují (nejde farmit body).
-const stmtInsertAnswer = db.prepare(`
-  INSERT OR IGNORE INTO answers (code, station_id, q_index, chosen, correct, points, created_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
-`);
-const stmtGetAnswers = db.prepare("SELECT * FROM answers WHERE code = ?");
-const stmtGetAnswer = db.prepare(
-  "SELECT * FROM answers WHERE code = ? AND station_id = ? AND q_index = ?"
+// ---- Odemčení stanovišť ----------------------------------------------------
+const stmtInsertUnlock = db.prepare(
+  "INSERT OR IGNORE INTO unlocks (code, station_id, kind, created_at) VALUES (?, ?, ?, ?)"
 );
+const stmtGetUnlocks = db.prepare("SELECT station_id, kind FROM unlocks WHERE code = ?");
 
-export function recordAnswer(code, stationId, qIndex, chosen, correct, points) {
-  const res = stmtInsertAnswer.run(
-    code, stationId, qIndex, chosen, correct ? 1 : 0, points, nowIso()
-  );
-  const firstTime = res.changes > 0;
-  const stored = stmtGetAnswer.get(code, stationId, qIndex);
-  return { firstTime, stored };
+export function addUnlock(code, stationId, kind) {
+  stmtInsertUnlock.run(code, stationId, kind, nowIso());
 }
-export function getAnswers(code) {
-  return stmtGetAnswers.all(code);
+// Vrací Set ve tvaru "s3:arrive", "s5:task" …
+export function getUnlocks(code) {
+  return new Set(stmtGetUnlocks.all(code).map((r) => `${r.station_id}:${r.kind}`));
+}
+
+// ---- Volby -----------------------------------------------------------------
+const stmtInsertChoice = db.prepare(`
+  INSERT OR IGNORE INTO choices (code, station_id, choice, success, created_at)
+  VALUES (?, ?, ?, ?, ?)
+`);
+const stmtGetChoices = db.prepare("SELECT station_id, choice, success FROM choices WHERE code = ?");
+
+// Vrací true, pokud se volba uložila poprvé.
+export function addChoice(code, stationId, choice, success) {
+  const s = success == null ? null : success ? 1 : 0;
+  return stmtInsertChoice.run(code, stationId, choice, s, nowIso()).changes > 0;
+}
+// Vrací { s1: { choice, success }, … }
+export function getChoices(code) {
+  const out = {};
+  for (const r of stmtGetChoices.all(code)) {
+    out[r.station_id] = { choice: r.choice, success: r.success == null ? null : !!r.success };
+  }
+  return out;
 }
 
 // ---- Zpětná vazba ----------------------------------------------------------
@@ -93,50 +119,6 @@ const stmtUpsertFeedback = db.prepare(`
 `);
 export function saveFeedback(code, { rating, recommend, best, improve }) {
   stmtUpsertFeedback.run(code, rating ?? null, recommend ?? null, best ?? null, improve ?? null, nowIso());
-}
-export function getFeedback(code) {
-  return db.prepare("SELECT * FROM feedback WHERE code = ?").get(code) || null;
-}
-
-// ---- Souhrny / žebříček ----------------------------------------------------
-// Skóre a počet splněných stanovišť pro každého účastníka.
-const stmtLeaderboard = db.prepare(`
-  SELECT p.code, p.nickname, p.created_at, p.finished_at,
-         COALESCE(SUM(a.points), 0)                              AS points,
-         COUNT(DISTINCT CASE WHEN a.correct >= 0 THEN a.station_id END) AS stations,
-         COALESCE(SUM(a.correct), 0)                             AS correct_answers,
-         COUNT(a.q_index)                                        AS answered
-  FROM participants p
-  LEFT JOIN answers a ON a.code = p.code
-  GROUP BY p.code
-  ORDER BY points DESC, p.finished_at ASC, p.created_at ASC
-`);
-export function leaderboard() {
-  return stmtLeaderboard.all();
-}
-
-// Souhrn jednoho účastníka (pro obnovení postupu i finální skóre).
-export function participantSummary(code) {
-  const p = getParticipant(code);
-  if (!p) return null;
-  const answers = getAnswers(code);
-  const points = answers.reduce((s, a) => s + a.points, 0);
-  const stationsDone = new Set(answers.map((a) => a.station_id)).size;
-  const correct = answers.reduce((s, a) => s + a.correct, 0);
-  return { ...p, points, stationsDone, correct, answers };
-}
-
-// Pořadí konkrétního účastníka v žebříčku (1 = první).
-export function rankOf(code) {
-  const board = leaderboard();
-  const idx = board.findIndex((r) => r.code === code);
-  return { rank: idx < 0 ? null : idx + 1, total: board.length };
-}
-
-export function stats() {
-  const total = db.prepare("SELECT COUNT(*) n FROM participants").get().n;
-  const finished = db.prepare("SELECT COUNT(*) n FROM participants WHERE finished_at IS NOT NULL").get().n;
-  return { total, finished };
 }
 
 export default db;

@@ -1,19 +1,20 @@
 // ---------------------------------------------------------------------------
-//  DOD Trasa – backend (Node + Express + SQLite)
+//  Od kapesného k důchodu – backend (Node + Express + SQLite)
 //  Spuštění:  npm install  &&  npm start
 //  Nastavení přes proměnné prostředí (volitelné):
 //    PORT         port serveru (výchozí 3000)
 //    DB_PATH      cesta k databázi (výchozí ./data/dod.sqlite)
 //    ADMIN_TOKEN  heslo pro admin přehled a export (VÝCHOZÍ "zmen-me" – ZMĚŇTE!)
+//    QR_SECRET    tajemství, ze kterého se počítají kódy v QR (VÝCHOZÍ "zmen-me-qr" – ZMĚŇTE!
+//                 a po vytištění QR kódů už neměňte, jinak přestanou platit)
 // ---------------------------------------------------------------------------
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import {
-  publicStations, grade, MAX_POINTS, POINTS_PER_CORRECT, THEME_LABEL, STATIONS,
-} from "./questions.js";
+import * as game from "./game.js";
 import * as store from "./db.js";
 
+const { STATIONS, FINAL_INDEX } = game;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.use(express.json());
@@ -23,7 +24,6 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "zmen-me";
 
 // --- Generování unikátního kódu účastníka: DOD-XXXX -------------------------
-// Vynechány matoucí znaky (0/O, 1/I) kvůli čitelnosti na kartičkách/QR.
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function randomCode() {
   let s = "";
@@ -35,100 +35,134 @@ function makeUniqueCode() {
     const code = randomCode();
     if (!store.getParticipant(code)) return code;
   }
-  // krajně nepravděpodobné – přidáme delší příponu
   return "DOD-" + Date.now().toString(36).toUpperCase();
 }
 
-// --- Validace kódu z requestu ----------------------------------------------
 function requireParticipant(req, res) {
-  const code = (req.body?.code || req.query?.code || "").toString().trim().toUpperCase();
+  const code = (req.body?.code || req.params?.code || "").toString().trim().toUpperCase();
   const p = code && store.getParticipant(code);
   if (!p) {
-    res.status(404).json({ error: "Neznámý kód účastníka. Spusť trasu znovu." });
+    res.status(404).json({ error: "Neznámý hrací kód. Začni hru znovu." });
     return null;
   }
   return p;
 }
 
+// ---------------------------------------------------------------------------
+//  Postup hráče: kde je, co má odemčené a kolik má peněz.
+//  Stanoviště jdou povinně popořadě, aktuální je první, na kterém ještě nevolil.
+// ---------------------------------------------------------------------------
+function progress(p) {
+  const choices = store.getChoices(p.code);
+  const unlocks = store.getUnlocks(p.code);
+  let current = 0;
+  while (current < FINAL_INDEX && choices[STATIONS[current].id]) current++;
+  const st = STATIONS[current];
+  const arrived = unlocks.has(`${st.id}:arrive`);
+  const taskDone = !st.task || unlocks.has(`${st.id}:task`);
+  const S = game.replay(choices, arrived ? current : current - 1);
+  return {
+    code: p.code,
+    current,                         // index aktuálního stanoviště (0 = první)
+    stationId: st.id,
+    arrived,                         // naskenoval QR na místě?
+    taskDone,                        // splnil úkol s obsluhou (jen u task stanovišť)?
+    finished: !!p.finished_at,
+    money: { piggy: S.piggy, bank: S.bank, invest: S.invest, spent: S.spent, total: S.total },
+    types: S.types,
+    unlockedInvest: S.unlockedInvest,
+    elapsed: arrived && current > 0 ? S.elapsed : null, // co se stalo s penězi cestou sem
+    result: arrived && st.final ? finalResult(S) : null,
+  };
+}
+
+function finalResult(S) {
+  const tier = game.tierFor(S.total);
+  return {
+    total: S.total,
+    tier: { id: tier.id, t: tier.t, d: tier.d, prize: tier.prize, prizeText: tier.prizeText },
+    persona: game.personaFor(S.types),
+  };
+}
+
 // ===========================================================================
-//  VEŘEJNÉ API (pro účastníky)
+//  VEŘEJNÉ API (pro hráče)
 // ===========================================================================
 
-// Konfigurace + stanoviště BEZ správných odpovědí.
+// Stanoviště BEZ informací o tom, co se vyplatí + typy hráče a úrovně důchodu.
 app.get("/api/config", (_req, res) => {
-  res.json({
-    stations: publicStations(),
-    maxPoints: MAX_POINTS,
-    pointsPerCorrect: POINTS_PER_CORRECT,
-    themeLabels: THEME_LABEL,
-    stationCount: STATIONS.length,
-  });
+  res.json({ stations: game.publicStations(), ...game.publicRules() });
 });
 
-// Registrace nového účastníka → přidělí kód.
+// Registrace nového hráče → přidělí kód.
 app.post("/api/register", (req, res) => {
   const nickname = (req.body?.nickname || "").toString().trim().slice(0, 40) || null;
   const code = makeUniqueCode();
-  store.createParticipant(code, nickname);
-  res.json({ code, nickname });
+  const p = store.createParticipant(code, nickname);
+  res.json(progress(p));
 });
 
-// Stav / postup účastníka (pro obnovení po zavření prohlížeče).
+// Stav hráče (pro obnovení po zavření prohlížeče).
 app.get("/api/me/:code", (req, res) => {
-  const code = req.params.code.toString().trim().toUpperCase();
-  const summary = store.participantSummary(code);
-  if (!summary) return res.status(404).json({ error: "Neznámý kód." });
-  // obohatíme odpovědi o správný index a vysvětlení (dopočítá server)
-  const answers = summary.answers.map((a) => {
-    const g = grade(a.station_id, a.q_index, a.chosen);
-    return {
-      station: a.station_id, q: a.q_index, chosen: a.chosen,
-      correct: !!a.correct, correctIndex: g?.correctIndex, points: a.points, expl: g?.expl,
-    };
-  });
-  res.json({
-    code: summary.code, nickname: summary.nickname,
-    points: summary.points, stationsDone: summary.stationsDone,
-    finished: !!summary.finished_at, answers,
-  });
+  const p = requireParticipant(req, res);
+  if (!p) return;
+  res.json(progress(p));
 });
 
-// Odeslání odpovědi → server vyhodnotí a uloží.
+// Naskenovaný QR kód → odemkne stanoviště (nebo potvrdí splněný úkol).
+app.post("/api/unlock", (req, res) => {
+  const p = requireParticipant(req, res);
+  if (!p) return;
+  const found = game.findToken(req.body?.token);
+  if (!found) return res.status(400).json({ error: "Tenhle kód neznáme. Zkontroluj, jestli jsi ho opsal(a) správně." });
+
+  const before = progress(p);
+  if (found.index < before.current) {
+    return res.json({ ...before, notice: `Stanoviště ${found.index + 1} už máš hotové.` });
+  }
+  if (found.index > before.current) {
+    return res.status(409).json({
+      error: `Tohle je stanoviště ${found.index + 1}. Stanoviště jdou popořadě, teď tě čeká stanoviště ${before.current + 1}.`,
+    });
+  }
+  if (found.kind === "task" && !before.arrived) {
+    return res.status(409).json({ error: "Nejdřív naskenuj QR kód, který visí na stanovišti." });
+  }
+  store.addUnlock(p.code, found.station.id, found.kind);
+  if (found.station.final) store.finishParticipant(p.code);
+  res.json(progress(store.getParticipant(p.code)));
+});
+
+// Odpověď na otázku → server ji vyhodnotí, u podnikání hodí kostkou a uloží.
 app.post("/api/answer", (req, res) => {
   const p = requireParticipant(req, res);
   if (!p) return;
-  const stationId = (req.body?.station || "").toString();
-  const qIndex = Number(req.body?.q);
-  const chosen = Number(req.body?.chosen);
-  const g = grade(stationId, qIndex, chosen);
-  if (!g) return res.status(400).json({ error: "Neplatné stanoviště nebo otázka." });
+  const now = progress(p);
+  const st = STATIONS[now.current];
+  const choice = Number(req.body?.choice);
 
-  const { firstTime, stored } = store.recordAnswer(
-    p.code, stationId, qIndex, chosen, g.correct, g.points
-  );
-  const summary = store.participantSummary(p.code);
-  res.json({
-    // Body se počítají jen z PRVNÍ odpovědi (firstTime). Při opakování vrací uložený stav.
-    scored: firstTime,
-    correct: !!stored.correct,
-    correctIndex: g.correctIndex,
-    points: stored.points,
-    expl: g.expl,
-    totalPoints: summary.points,
-    stationsDone: summary.stationsDone,
-  });
-});
+  if (req.body?.station !== st.id) {
+    return res.status(409).json({ error: `Teď odpovídáš na stanovišti ${now.current + 1}.`, ...now });
+  }
+  if (st.final) return res.status(409).json({ error: "Na posledním stanovišti se už neodpovídá." });
+  if (!now.arrived) return res.status(409).json({ error: "Nejdřív naskenuj QR kód na stanovišti." });
+  if (!now.taskDone) return res.status(409).json({ error: "Nejdřív splň úkol a nech si od obsluhy naskenovat QR kód." });
+  if (!game.choiceAllowed(st, choice, now.unlockedInvest)) {
+    return res.status(400).json({ error: "Tuhle možnost teď nemůžeš zvolit." });
+  }
 
-// Dokončení trasy → uzavře a vrátí finální skóre + pořadí.
-app.post("/api/finish", (req, res) => {
-  const p = requireParticipant(req, res);
-  if (!p) return;
-  store.finishParticipant(p.code);
-  const summary = store.participantSummary(p.code);
-  const { rank, total } = store.rankOf(p.code);
+  store.addChoice(p.code, st.id, choice, game.rollRisk(st, choice));
+  // Spočítáme výsledek z uložených dat (při dvojkliku se vezme první volba).
+  const saved = store.getChoices(p.code)[st.id];
+  const S = game.replay(store.getChoices(p.code), now.current);
+  const o = st.opts[saved.choice];
   res.json({
-    points: summary.points, stationsDone: summary.stationsDone,
-    correct: summary.correct, maxPoints: MAX_POINTS, rank, totalPlayers: total,
+    ...progress(p),
+    answer: {
+      stationId: st.id, choice: saved.choice, choiceText: o.t,
+      group: o.g || null, gain: S.last.gain, outcome: S.last.outcome, win: S.last.win ?? null,
+      tip: st.tip,
+    },
   });
 });
 
@@ -146,15 +180,29 @@ app.post("/api/feedback", (req, res) => {
   res.json({ ok: true });
 });
 
-// Veřejný žebříček (TOP 20) – jen kód/přezdívka a body.
+// Všichni hráči s výsledky (pro žebříček i export).
+function allResults() {
+  return store.allParticipants().map((p) => {
+    const pr = progress(p);
+    const persona = game.personaFor(pr.types);
+    return {
+      code: p.code, nickname: p.nickname, created_at: p.created_at, finished_at: p.finished_at,
+      stationsDone: pr.current + (pr.result ? 1 : 0),
+      total: Math.round(pr.money.total),
+      tier: pr.result?.tier.t ?? null,
+      prize: pr.result?.tier.prize ?? null,
+      types: pr.types,
+      persona: game.GROUPS[persona.main].name + (persona.second ? " × " + game.GROUPS[persona.second].name : ""),
+    };
+  }).sort((a, b) => (!!b.finished_at - !!a.finished_at) || (b.total - a.total));
+}
+
+// Veřejný žebříček (TOP 20 dokončených).
 app.get("/api/leaderboard", (_req, res) => {
-  const board = store.leaderboard().slice(0, 20).map((r, i) => ({
-    rank: i + 1,
-    name: r.nickname || r.code,
-    points: r.points,
-    stations: r.stations,
-  }));
-  res.json({ board, stats: store.stats() });
+  const all = allResults();
+  const board = all.filter((r) => r.finished_at).slice(0, 20)
+    .map((r, i) => ({ rank: i + 1, name: r.nickname || r.code, total: r.total, tier: r.tier }));
+  res.json({ board, stats: { total: all.length, finished: all.filter((r) => r.finished_at).length } });
 });
 
 // ===========================================================================
@@ -169,36 +217,41 @@ function requireAdmin(req, res) {
   return true;
 }
 
-// Kompletní žebříček pro organizátory.
 app.get("/api/admin/leaderboard", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  res.json({ board: store.leaderboard(), stats: store.stats(), maxPoints: MAX_POINTS });
+  const board = allResults();
+  res.json({ board, stats: { total: board.length, finished: board.filter((r) => r.finished_at).length } });
 });
 
-// Export všech výsledků do CSV (otevře se v Excelu).
+// Kódy do QR pro tisk. URL vede na hru, která stanoviště sama odemkne.
+app.get("/api/admin/qr", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const base = `${req.protocol}://${req.get("host")}`;
+  res.json({ codes: game.allTokens().map((t) => ({ ...t, url: `${base}/?qr=${t.token}` })) });
+});
+
+// Export do CSV (otevře se v Excelu).
 app.get("/api/admin/export.csv", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const rows = store.leaderboard();
-  const head = ["poradi", "kod", "prezdivka", "body", "stanovist", "spravnych_odpovedi", "start", "dokonceno"];
+  const head = ["poradi", "kod", "prezdivka", "majetek_kc", "duchod", "cena", "typ",
+    "pozitkar", "stradatel", "podnikavec", "stanovist", "start", "dokonceno"];
   const csv = [head.join(";")];
-  rows.forEach((r, i) => {
+  allResults().forEach((r, i) => {
     csv.push([
-      i + 1, r.code, (r.nickname || "").replace(/;/g, ","),
-      r.points, r.stations, r.correct_answers, r.created_at, r.finished_at || "",
+      i + 1, r.code, (r.nickname || "").replace(/;/g, ","), r.total, r.tier ?? "", r.prize ?? "",
+      r.persona, r.types.p, r.types.s, r.types.r, r.stationsDone, r.created_at, r.finished_at || "",
     ].join(";"));
   });
-  // BOM kvůli české diakritice v Excelu
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader("Content-Disposition", 'attachment; filename="dod-vysledky.csv"');
-  res.send("﻿" + csv.join("\n"));
+  res.send("﻿" + csv.join("\n")); // BOM kvůli české diakritice v Excelu
 });
 
-// Admin stránka (žebříček na projektor). Token se zadává v ní.
 app.get("/admin", (_req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
 });
 
 app.listen(PORT, () => {
-  console.log(`DOD Trasa běží na http://localhost:${PORT}`);
+  console.log(`Od kapesného k důchodu běží na http://localhost:${PORT}`);
   console.log(`Admin přehled: http://localhost:${PORT}/admin  (token: ${ADMIN_TOKEN})`);
 });

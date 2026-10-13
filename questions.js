@@ -1,170 +1,139 @@
 // ---------------------------------------------------------------------------
-//  ZDROJ PRAVDY o stanovištích a otázkách (běží POUZE na serveru).
-//  Správné odpovědi (pole `a`) se do prohlížeče účastníka NIKDY neposílají —
-//  server je používá jen k vyhodnocení. Díky tomu nejde podvádět čtením kódu.
+//  ZDROJ PRAVDY o obsahu hry „Od kapesného k důchodu" (běží POUZE na serveru).
 //
-//  ÚPRAVY: Otázky s [HRANATÝMI ZÁVORKAMI] doplňte reálnými místními údaji.
-//  `a` = index správné odpovědi (0 = první možnost, 1 = druhá, ...).
-//  Za každou správnou odpověď se přičítá POINTS_PER_CORRECT bodů (viz níže).
+//  Tady se mění texty, částky a odpovědi. Pravidla (jak se peníze počítají)
+//  jsou v game.js.
+//
+//  Každá možnost odpovědi má:
+//    t     text odpovědi
+//    d     (nepovinné) menší popisek pod odpovědí
+//    g     typ hráče, kterému dá bod: "p" Požitkář, "s" Střadatel, "r" Podnikavec
+//    to    kam jdou peníze: { spent, piggy, bank, invest } jako podíl (1 = vše)
+//    risk  (podnikání) { p: šance na úspěch 0–1, win: kolik Kč získá při úspěchu }
+//    debt  (nepovinné) kolik Kč navíc to stojí (např. úroky ze splátek)
+//    needs (nepovinné) "invest" = možnost je zamčená, dokud hráč neprojde kurzem
+//    ok    jen u kvízu: true = správná odpověď
+//
+//  Pole g, to, risk, debt a ok se do prohlížeče NEPOSÍLAJÍ (viz publicStations
+//  v game.js), takže hráč z kódu stránky nevyčte, co se vyplatí.
 // ---------------------------------------------------------------------------
 
-export const POINTS_PER_CORRECT = 50;
-
-export const THEME_LABEL = {
-  historie: "Historie",
-  chemie: "Chemie",
-  ekologie: "Ekologie",
-  finance: "Finance",
-  volno: "Kam mimo školu",
-};
-
 export const STATIONS = [
-  {
-    id: "s1", num: 1, name: "Start – Hlavní budova", theme: "historie",
-    loc: "Vstupní hala, u informačního pultu",
-    task: "Zorientuj se v mapě trasy a všimni si roku založení školy na pamětní desce u vchodu.",
-    edit: true,
-    q: [
-      { t: "[Ve kterém roce byla škola založena?]", opts: ["[1921]", "[1948]", "[1969]", "[1993]"], a: 1,
-        expl: "Doplňte správný rok podle pamětní desky. Otázku upravte v questions.js (stanoviště s1)." },
-      { t: "Co je „kampus“?", opts: ["Studentská menza", "Areál školy s budovami a zázemím", "Předmět prvního ročníku", "Typ stipendia"], a: 1,
-        expl: "Kampus je ucelený areál vysoké školy — budovy, koleje, sportoviště i zeleň." },
+  { id: "s1", age: 8, title: "První kapesné", income: 50,
+    story: "Je ti 8 let. Babička ti k narozeninám dala první kapesné, padesátikorunu. Cestou domů jdete kolem cukrárny.",
+    q: "Co uděláš s padesátikorunou?",
+    opts: [
+      { g: "s", t: "Hodím ji do prasátka", d: "Doma v poličce", to: { piggy: 1 } },
+      { g: "p", t: "Koupím si zmrzlinu", d: "Hned a s radostí", to: { spent: 1 } },
+      { g: "r", t: "Koupím semínka, vypěstuju bylinky a prodám je sousedům", d: "Může vynést víc, ale taky nemusí vyrůst nic", risk: { p: 0.75, win: 150 } },
     ],
-  },
-  {
-    id: "s2", num: 2, name: "Městská knihovna", theme: "historie",
-    loc: "Nám. u knihovny · partner trasy",
-    task: "Zajdi dovnitř a najdi studovnu. Zeptej se, jak se student stane čtenářem.",
-    edit: false,
-    q: [
-      { t: "K čemu slouží ISBN u knihy?", opts: ["Určuje cenu", "Jednoznačně identifikuje vydání knihy", "Značí počet stran", "Je to jméno autora"], a: 1,
-        expl: "ISBN je mezinárodní číslo, které jednoznačně identifikuje konkrétní vydání publikace." },
-      { t: "Co je to studovna?", opts: ["Místo k tichému studiu s přístupem k materiálům", "Kavárna v knihovně", "Sklad starých knih", "Učebna jen pro profesory"], a: 0,
-        expl: "Studovna je tiché místo, kde si můžeš půjčit prezenčně literaturu a v klidu se učit." },
+    tip: ["Prasátko vs. účet", "Peníze v prasátku se neztratí, ale kvůli inflaci si za ně za pár let koupíš méně."] },
+
+  { id: "s2", age: 12, title: "Příležitost: nošení dřeva", income: 100,
+    story: "Soused potřebuje přenosit dřevo do kůlny. Po dvou hodinách práce ti dá stovku.",
+    q: "Co s vydělanou stovkou?",
+    opts: [
+      { g: "p", t: "Koupím si novou hru do mobilu", to: { spent: 1 } },
+      { g: "r", t: "Koupím z bazaru rozbité kolo, opravím ho a prodám", d: "Když se to povede, vyděláš", risk: { p: 0.75, win: 400 } },
+      { g: "s", t: "Uložím ji na dětský spořicí účet", to: { bank: 1 } },
     ],
-  },
-  {
-    id: "s3", num: 3, name: "Kavárna Na Zastávce", theme: "volno",
-    loc: "Roh ulice u zastávky · partner akce",
-    task: "Dej si pauzu. Zjisti, co kavárna nabízí studentům (sleva, klidný kout na učení?).",
-    edit: false,
-    q: [
-      { t: "Odkud pochází káva odrůdy Arabica?", opts: ["Z brambor", "Z kávovníku", "Z čajovníku", "Ze pšenice"], a: 1,
-        expl: "Káva se získává z pražených semen (zrn) plodů kávovníku." },
-      { t: "Proč je fajn mít místo na učení mimo kolej či domov?", opts: ["Není to k ničemu", "Změna prostředí pomáhá soustředění", "Je to povinné", "Kvůli wifi hesla"], a: 1,
-        expl: "Změna prostředí a oddělení „místa na učení“ od „místa na odpočinek“ pomáhá koncentraci." },
+    tip: ["První vlastní výdělek", "Peníze, které si vyděláš prací, jsou aktivní příjem. Zkus si z každého příjmu nejdřív kousek odložit a teprve pak utrácet."] },
+
+  { id: "s3", age: 16, title: "První brigáda ve fastfoodu", income: 4800,
+    story: "O prázdninách jsi na brigádě ve fastfoodu. Za 40 odpracovaných hodin po 120 Kč máš 4 800 Kč.",
+    q: "Jak naložíš s první výplatou?",
+    opts: [
+      { g: "r", t: "Koupím použitý foťák a budu fotit na zakázku", d: "Plesy, oslavy, sociální sítě", risk: { p: 0.7, win: 12000 } },
+      { g: "s", t: "Celou výplatu na spořicí účet", to: { bank: 1 } },
+      { g: "p", t: "Nové boty a oblečení", to: { spent: 1 } },
     ],
-  },
-  {
-    id: "s4", num: 4, name: "Menza / jídelna", theme: "finance",
-    loc: "Přízemí budovy C · studentské stravování",
-    task: "Prohlédni si nabídku a ceny. Spočítej, kolik by tě stál oběd každý všední den v měsíci.",
-    edit: false,
-    q: [
-      { t: "Oběd v menze stojí 60 Kč. Kolik zaplatíš za 20 obědů?", opts: ["600 Kč", "1 200 Kč", "1 800 Kč", "2 400 Kč"], a: 1,
-        expl: "60 × 20 = 1 200 Kč. Dotované studentské stravování šetří i tisíce korun měsíčně." },
-      { t: "Co je na jídelníčku „dotovaná cena“?", opts: ["Cena zvýšená o daň", "Cena snížená příspěvkem (např. školy/státu)", "Cena jen pro učitele", "Cena za nápoj navíc"], a: 1,
-        expl: "Dotace snižuje cenu — část hradí škola nebo stát, ty platíš méně." },
+    tip: ["Pravidlo 50/30/20", "Oblíbené pravidlo říká: 50 % příjmu na nutné výdaje, 30 % na to, co tě baví, a 20 % na spoření."] },
+
+  { id: "s4", age: 20, title: "Práce při studiu", income: 24000,
+    story: "Studuješ na VŠCHT a vedle školy pracuješ v laboratoři za 200 Kč/h. Za semestr ti zbylo 24 000 Kč.",
+    q: "Kamarádi mají nový telefon. Co uděláš?",
+    opts: [
+      { g: "p", t: "Koupím telefon za 24 000 Kč na splátky", d: "Na úrocích přeplatíš 6 000 Kč", to: { spent: 1 }, debt: 6000 },
+      { g: "s", t: "Založím si nouzovou rezervu na účtu", d: "Pro případ nečekaných výdajů", to: { bank: 1 } },
+      { g: "r", t: "Rozjedu s kamarádem e-shop s vlastními tričky", d: "Podnikání: velká šance, velké riziko", risk: { p: 0.6, win: 60000 } },
     ],
-  },
-  {
-    id: "s5", num: 5, name: "Chemický koutek", theme: "chemie",
-    loc: "Venkovní stan u budovy laboratoří",
-    task: "U stanoviště uvidíš ukázku jednoduchého pokusu. Sleduj, co se děje, a odpověz na kvíz.",
-    edit: false,
-    q: [
-      { t: "Jaká je chemická značka vody?", opts: ["CO₂", "O₂", "H₂O", "NaCl"], a: 2,
-        expl: "Voda je H₂O — dva atomy vodíku a jeden atom kyslíku." },
-      { t: "Jaké pH má neutrální roztok (např. čistá voda)?", opts: ["0", "7", "14", "1"], a: 1,
-        expl: "Neutrální pH = 7. Pod 7 je kyselé, nad 7 zásadité prostředí." },
+    tip: ["Splátky jsou drahé", "Nákup na splátky znamená, že za stejnou věc zaplatíš víc. Nouzová rezerva ve výši 3–6 měsíčních výdajů tě podrží, když se něco pokazí."] },
+
+  // task: true = na stanovišti je úkol s obsluhou. Po splnění organizátor
+  // ukáže druhý QR kód („úkolový"), teprve pak jde odpovídat.
+  { id: "s5", age: 22, title: "Příležitostný přivýdělek", income: 500, task: true,
+    story: "Na stanovišti tě čeká úkol od studentů. Když ho splníš, organizátor ti ukáže speciální QR kód a dostaneš odměnu 500 Kč.",
+    taskText: "[DOPLNIT: zadání úkolu, který připraví tým stanoviště]",
+    q: "Úkol splněn. Kam dáš odměnu?",
+    opts: [
+      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
+      { g: "r", t: "Půjčím ji kamarádovi na start-up za malý podíl ve firmě", d: "Většina start-upů neuspěje", risk: { p: 0.5, win: 2500 } },
+      { g: "p", t: "Utratím ji za večer ve městě", to: { spent: 1 } },
     ],
-  },
-  {
-    id: "s6", num: 6, name: "EkoBod – zeleň kampusu", theme: "ekologie",
-    loc: "Park mezi budovami A a B",
-    task: "Najdi nejbližší tři barevné kontejnery na tříděný odpad a zkontroluj, co kam patří.",
-    edit: false,
-    q: [
-      { t: "Do jakého kontejneru patří sklo?", opts: ["Žlutý", "Modrý", "Zelený", "Hnědý"], a: 2,
-        expl: "Sklo se hází do zeleného (barevné) nebo bílého (čiré) kontejneru." },
-      { t: "Co znamená zkratka PET u lahví?", opts: ["Domácí zvíře", "Polyethylentereftalát", "Papír a textil", "Přírodní ekologický typ"], a: 1,
-        expl: "PET = polyethylentereftalát, plast na nápojové lahve. Patří do žlutého kontejneru." },
+    tip: ["Bonusy a přivýdělky", "Nečekané peníze se utrácejí nejsnáz. Když je rovnou uložíš, ani ti nebudou chybět."] },
+
+  // quiz: true = otázka má správnou odpověď (ok: true). Nedává bod žádnému typu.
+  { id: "s6", age: 24, title: "Kurz o investování", income: 0, quiz: true, bonus: 2000,
+    story: "Škola pořádá dobrovolný kurz o investování. Kdo správně odpoví na kontrolní otázku, získá bonus 2 000 Kč. Po kurzu můžeš peníze nově ukládat i do akcií a ETF.",
+    q: "Co je ETF?",
+    opts: [
+      { t: "Spořicí účet s pevným úrokem garantovaným státem" },
+      { t: "Fond, který kupuje najednou akcie mnoha firem", ok: true },
+      { t: "Druh kryptoměny" },
     ],
-  },
-  {
-    id: "s7", num: 7, name: "Finanční koutek", theme: "finance",
-    loc: "Foyer budovy B · stánek",
-    task: "Vyzvedni si leták o studentském rozpočtu a stipendiích. Zamysli se nad svými měsíčními výdaji.",
-    edit: false,
-    q: [
-      { t: "Co znamená zkratka RPSN u půjčky?", opts: ["Roční počet splátek navíc", "Roční procentní sazba nákladů", "Rychlá platba splátek nájmu", "Registr půjček"], a: 1,
-        expl: "RPSN vyjadřuje celkové roční náklady půjčky v procentech — pomáhá porovnat nabídky." },
-      { t: "Co je to inflace?", opts: ["Růst cen a pokles kupní síly peněz", "Sleva ve všech obchodech", "Zvýšení stipendia", "Druh spoření"], a: 0,
-        expl: "Inflace = obecný růst cenové hladiny. Za stejné peníze si postupně koupíš méně." },
+    tip: ["Diverzifikace", "ETF rozloží tvoje peníze mezi stovky firem, takže neztratíš všechno, když se jedné nedaří. Dlouhodobě akciové ETF rostly rychleji než spořicí účty, ale jejich hodnota kolísá."] },
+
+  { id: "s7", age: 25, title: "Práce na plný úvazek", income: 900000,
+    story: "Nastupuješ jako chemik do firmy. Každý měsíc ti po zaplacení nájmu a jídla zbyde 5 000 Kč. Za 15 let to dělá 900 000 Kč.",
+    q: "Co budeš s volnými penězi dělat?",
+    opts: [
+      { g: "p", t: "Užívat si: dražší auto, dovolené", to: { spent: 1 } },
+      { g: "r", t: "Pravidelně investovat do ETF", to: { invest: 1 }, needs: "invest" },
+      { g: "s", t: "Posílat je na spořicí účet", to: { bank: 1 } },
     ],
-  },
-  {
-    id: "s8", num: 8, name: "Historický milník", theme: "historie",
-    loc: "[Pamětní místo / socha v okolí školy]",
-    task: "Přejdi k historickému místu poblíž a přečti si informační ceduli.",
-    edit: true,
-    q: [
-      { t: "[Ke které významné osobnosti / události se místo váže?]", opts: ["[Možnost A]", "[Možnost B — správně]", "[Možnost C]", "[Možnost D]"], a: 1,
-        expl: "Doplňte podle konkrétního místa ve vašem městě. Upravte v questions.js (stanoviště s8)." },
-      { t: "Proč je dobré znát historii místa, kde budeš studovat?", opts: ["Není to důležité", "Buduje vztah k okolí a je to zajímavé", "Je to u zkoušky", "Kvůli slevě do menzy"], a: 1,
-        expl: "Znalost okolí ti pomůže cítit se na novém místě rychleji doma." },
+    tip: ["Složené úročení", "Výnos, který investice vydělá, se dál zhodnocuje. Čím dřív začneš, tím víc za tebe pracuje čas."] },
+
+  { id: "s8", age: 40, title: "Ředitel firmy", income: 2000000,
+    story: "Povýšili tě na ředitele s platem 150 000 Kč měsíčně. Za dalších 15 let ti zbyde 2 miliony korun.",
+    q: "Jak naložíš s vyšším příjmem?",
+    opts: [
+      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
+      { g: "p", t: "Luxusní vila a sportovní auto", to: { spent: 1 } },
+      { g: "r", t: "Investovat a žít skromněji", to: { invest: 1 }, needs: "invest" },
     ],
-  },
-  {
-    id: "s9", num: 9, name: "Volnočasová zóna", theme: "volno",
-    loc: "Sportoviště / klubovna spolku",
-    task: "Zjisti, jaké kroužky, spolky nebo sporty tady studenti provozují. Kam bys zapadl/a ty?",
-    edit: false,
-    q: [
-      { t: "Co je studentský spolek?", opts: ["Povinný předmět", "Dobrovolná studentská organizace pro aktivity", "Zkouškové období", "Typ koleje"], a: 1,
-        expl: "Spolky pořádají akce, sport, kulturu i dobrovolnictví — skvělý způsob, jak poznat lidi." },
-      { t: "Proč se zapojit do aktivit mimo výuku?", opts: ["Nová přátelství a zkušenosti", "Zabírá to jen čas", "Je to zakázané", "Sníží se ti známky"], a: 0,
-        expl: "Mimoškolní aktivity rozvíjí dovednosti, kontakty i životopis." },
+    tip: ["Inflace životního stylu", "Když s vyšším platem rostou i výdaje, nezbývá ti víc než dřív. Bohatství neurčuje plat, ale to, kolik z něj ti zůstane."] },
+
+  { id: "s9", age: 55, title: "Poloviční úvazek", income: 300000,
+    story: "Zpomaluješ a pracuješ na poloviční úvazek. Do důchodu ti zbyde ještě 300 000 Kč.",
+    q: "Co s posledními úsporami před důchodem?",
+    opts: [
+      { g: "r", t: "Investovat", to: { invest: 1 }, needs: "invest" },
+      { g: "p", t: "Procestovat svět", to: { spent: 1 } },
+      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
     ],
-  },
-  {
-    id: "s10", num: 10, name: "Cíl – výzva Alza", theme: "chemie",
-    loc: "Vstupní hala · finální stanoviště",
-    task: "Poslední zastávka! Odpověz na techničtější otázky partnera a odevzdej trasu.",
-    edit: false,
-    q: [
-      { t: "Co je to RAM v počítači?", opts: ["Trvalé úložiště", "Operační (dočasná) paměť", "Procesor", "Grafická karta"], a: 1,
-        expl: "RAM je rychlá operační paměť pro běžící programy; po vypnutí se maže." },
-      { t: "Co znamená zkratka SSD?", opts: ["Super Speed Disk", "Solid State Drive", "System Software Data", "Secure Storage Device"], a: 1,
-        expl: "SSD (Solid State Drive) je rychlé úložiště bez pohyblivých částí, nástupce klasického HDD." },
-    ],
-  },
+    tip: ["Blíž k důchodu, míň rizika", "Před důchodem se vyplatí přesouvat část investic do bezpečnějších produktů, aby tě pokles trhu nezaskočil těsně před tím, než peníze budeš potřebovat."] },
+
+  // final: true = poslední stanoviště, žádná otázka, jen vyhodnocení.
+  { id: "s10", age: 65, title: "Důchod", final: true },
 ];
 
-// Maximální možné skóre (pro procenta a hranice cen).
-export const MAX_POINTS = STATIONS.reduce((s, st) => s + st.q.length, 0) * POINTS_PER_CORRECT;
+// Roční zhodnocení v herním zjednodušení (v dnešních penězích).
+export const RATE = { piggy: -0.02, bank: 0.01, invest: 0.06 };
 
-// Verze bez správných odpovědí – tohle dostane prohlížeč účastníka.
-export function publicStations() {
-  return STATIONS.map((st) => ({
-    id: st.id, num: st.num, name: st.name, theme: st.theme,
-    loc: st.loc, task: st.task, edit: st.edit,
-    q: st.q.map((q) => ({ t: q.t, opts: q.opts })), // POZOR: bez `a` a bez `expl`
-  }));
-}
+// Tři typy hráče (dolní lišta). Texty se ukážou na konci hry.
+export const GROUPS = {
+  p: { name: "Požitkář", color: "#f2a33a", motto: "Žiju teď",
+       text: "Peníze jsou pro tebe hlavně prostředek, jak si užít život. Umíš si udělat radost a nebojíš se utratit. Pozor jen, aby ti na stáří něco zbylo: i malá pravidelná částka stranou dělá za 40 let velký rozdíl." },
+  s: { name: "Střadatel", color: "#4a8af0", motto: "Jistota především",
+       text: "Jsi opatrný a rozvážný. Máš rezervu a dluhy ti nahánějí strach. Tvoje peníze jsou v bezpečí, jen rostou pomalu. Zkus část úspor dlouhodobě investovat, ať ti inflace neujídá." },
+  r: { name: "Podnikavec", color: "#e64010", motto: "Riskuju, aby to rostlo",
+       text: "Vidíš příležitosti tam, kde ostatní ne, a nebojíš se riskovat. Díky tomu ti peníze můžou růst nejrychleji. Nezapomínej ale na rezervu pro horší časy, ne každá sázka vyjde." },
+};
 
-// Pomocník pro vyhodnocení jedné odpovědi na serveru.
-export function grade(stationId, qIndex, chosen) {
-  const st = STATIONS.find((s) => s.id === stationId);
-  if (!st) return null;
-  const q = st.q[qIndex];
-  if (!q) return null;
-  const correct = chosen === q.a;
-  return {
-    correct,
-    correctIndex: q.a,
-    points: correct ? POINTS_PER_CORRECT : 0,
-    expl: q.expl,
-    stationQuestionCount: st.q.length,
-  };
-}
+// Úrovně důchodu a ceny (od nejlepší). Ceny podle toho, jak hráč skončí.
+export const TIERS = [
+  { id: "renta",  min: 8000000, t: "Vlastní dům a renta z dividend", d: "Žiješ z výnosů svých investic a peníze ti ještě rostou.", prize: "Hlavní cena", prizeText: "[DOPLNIT cenu]" },
+  { id: "byt",    min: 2500000, t: "Vlastní byt a klidný důchod", d: "Máš rezervu, občas si dopřeješ výlet.", prize: "Střední cena", prizeText: "[DOPLNIT cenu]" },
+  { id: "najem",  min: 500000,  t: "Skromný důchod v nájmu", d: "Vyjdeš, ale na nečekané výdaje nezbývá moc.", prize: "Malá cena", prizeText: "[DOPLNIT cenu]" },
+  { id: "davky",  min: null,    t: "Domov důchodců na dávkách", d: "Jsi odkázaný na státní důchod a dávky.", prize: "Účastnická drobnost", prizeText: "[DOPLNIT cenu]" },
+];

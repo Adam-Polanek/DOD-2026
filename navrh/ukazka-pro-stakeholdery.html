@@ -1,0 +1,621 @@
+<title>Od kapesného k důchodu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+  /* Varianta C „Deník" podle online manuálu VŠCHT (červená #e64010, černá, lososové doplňky). */
+  :root{
+    --red:#e64010; --red-dark:#b8320b; --black:#111; --white:#fff;
+    --peach:#fff4ef; --salmon:#ef8364; --grey:#d9d9d9;
+    --ink:#161412; --muted:#5d4c46; --line:#111; --bg:#f9d3c8; --card:#fff;
+    --good:#1f8a4c; --bad:#c0271b;
+    --f:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme:light;
+  }
+  html{background:var(--bg)}
+  body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.45}
+
+  /* rozvržení stránky: ukázka vlevo, popis vpravo */
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 16px 48px;display:grid;grid-template-columns:1fr;gap:28px}
+  .stage{min-width:0}
+  .phone{width:100%;max-width:430px;height:min(820px, 86svh);margin:0 auto;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);display:flex;flex-direction:column;position:relative;border:2px solid #111;border-radius:28px;box-shadow:8px 8px 0 #111}
+  @media (min-width:960px){
+    .wrap{grid-template-columns:430px 1fr;align-items:start;gap:48px}
+    .stage{position:sticky;top:24px}
+    .phone{height:min(820px, calc(100vh - 48px))}
+  }
+
+  header{position:sticky;top:0;z-index:5;background:var(--red);color:var(--white);padding:12px 16px;display:flex;align-items:center;gap:12px}
+  .logo{font-weight:900;font-stretch:112%;letter-spacing:.02em;font-size:15px;background:#111;color:#fff;padding:4px 8px;border-radius:3px}
+  .logo small{font-weight:600;opacity:.85;margin-left:4px;font-size:11px;letter-spacing:.08em}
+  .hdr-wallet{margin-left:auto;text-align:right;line-height:1.1}
+  .hdr-wallet .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+  .hdr-wallet .val{font-family:var(--mono);font-weight:600;font-size:17px}
+  .hdr-age{font-size:12px;opacity:.85}
+  .ribbon{position:absolute;right:-34px;top:62px;transform:rotate(45deg);background:#111;color:#fff;font-size:10px;font-weight:700;letter-spacing:.14em;padding:3px 40px;z-index:6;pointer-events:none}
+
+  main{flex:1;padding:20px 16px 28px;display:flex;flex-direction:column;gap:18px}
+  h1{font-size:34px;line-height:1.02;font-weight:900;font-stretch:118%;text-wrap:balance;margin:0}
+  h2{font-size:24px;line-height:1.1;font-weight:850;font-stretch:112%;text-wrap:balance;margin:0}
+  p{margin:0}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#111}
+  .muted{color:var(--muted)}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  .btn{appearance:none;font:inherit;font-weight:800;font-stretch:108%;font-size:17px;padding:16px 18px;border-radius:999px;background:#111;color:#fff;border:2px solid #111;box-shadow:4px 4px 0 var(--red);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+  .btn:hover{background:var(--red)}
+  .btn.ghost{background:#fff;color:#111;box-shadow:4px 4px 0 #111}
+  .btn.ghost:hover{background:#111;color:#fff}
+  .btn:focus-visible,.opt:focus-visible,.linkbtn:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+  .linkbtn{background:none;border:0;font:inherit;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px;padding:4px}
+
+  /* Elipsa – prvek vizuální identity VŠCHT */
+  .ellipse-hero{position:relative;padding:28px 4px 8px}
+  .ellipse-hero svg{position:absolute;inset:-10px -30px auto auto;width:260px;height:180px;pointer-events:none}
+
+  .card,.map,.st,.pot,.tr,.opt,.elapsed,.tip{border:2px solid #111;box-shadow:4px 4px 0 #111;border-radius:14px}
+  .timeline{display:grid;grid-template-columns:auto 1fr;gap:0 12px}
+  .tl-age{font-family:var(--mono);font-size:13px;color:var(--red);font-weight:600;padding-top:1px;text-align:right}
+  .tl-t{font-size:15px;padding-bottom:6px}
+  .card{background:var(--card);padding:18px;display:flex;flex-direction:column;gap:12px}
+  .rules{display:grid;gap:10px}
+  .rule{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:15px}
+  .rule b{display:block}
+  .ico{width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;font-size:14px}
+
+  .map{background:var(--card);padding:8px}
+  .map svg{width:100%;height:auto;display:block}
+  .stations{display:flex;flex-direction:column;gap:10px}
+  .st{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;background:var(--card);padding:12px}
+  .st .n{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-family:var(--mono);border:2px solid var(--grey);color:var(--muted)}
+  .st.done .n{background:#111;border-color:#111;color:#fff}
+  .st.cur{background:#fff4ef}
+  .st.cur .n{background:var(--red);border-color:var(--red);color:#fff}
+  .st .t{font-weight:750;font-size:15px}
+  .st .s{font-size:13px;color:var(--muted)}
+  .st .r{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .st.locked .t{color:var(--muted)}
+
+  .scan{aspect-ratio:1;max-width:100%;background:#1b1918;border-radius:22px;border:2px solid #111;position:relative;display:grid;place-items:center;overflow:hidden}
+  .scan .corner{position:absolute;width:46px;height:46px;border:5px solid var(--red)}
+  .c1{top:18%;left:18%;border-right:0!important;border-bottom:0!important;border-radius:10px 0 0 0}
+  .c2{top:18%;right:18%;border-left:0!important;border-bottom:0!important;border-radius:0 10px 0 0}
+  .c3{bottom:18%;left:18%;border-right:0!important;border-top:0!important;border-radius:0 0 0 10px}
+  .c4{bottom:18%;right:18%;border-left:0!important;border-top:0!important;border-radius:0 0 10px 0}
+  .scanline{position:absolute;left:20%;right:20%;height:2px;background:var(--salmon);box-shadow:0 0 12px var(--salmon);animation:scan 2.2s ease-in-out infinite alternate}
+  @keyframes scan{from{top:22%}to{top:78%}}
+  .scan .hint{color:#fff;opacity:.6;font-size:13px;position:absolute;bottom:16px;text-align:center;padding:0 16px}
+  .manual{display:flex;gap:8px}
+  .manual input{flex:1;min-width:0;font:inherit;font-family:var(--mono);padding:12px 14px;border-radius:12px;border:2px solid #111;background:#fff;text-transform:uppercase}
+
+  .age-badge{display:inline-flex;align-items:baseline;gap:8px;color:var(--ink);font-size:16px;font-weight:800;align-self:flex-start}
+  .age-badge .mono{font-family:var(--f);font-size:96px;font-weight:900;font-stretch:125%;color:var(--red);line-height:.8;letter-spacing:-.04em}
+  .elapsed{background:var(--peach);padding:12px 14px;font-size:14px;display:flex;flex-direction:column;gap:6px}
+  .elapsed .row{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px}
+  .story{position:relative;font-size:17px;line-height:1.55;background:#fff;border:2px solid #111;border-radius:18px 18px 18px 4px;padding:16px 18px;box-shadow:4px 4px 0 #111}
+  .income{display:flex;align-items:center;justify-content:space-between;background:#111;color:#fff;border-radius:14px;padding:14px 16px;box-shadow:4px 4px 0 var(--red)}
+  .income .lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;opacity:.7}
+  .income .v{font-family:var(--mono);font-size:24px;font-weight:600;color:var(--salmon)}
+  .q{font-weight:800;font-size:19px;font-stretch:106%;text-wrap:balance}
+  .opts{display:flex;flex-direction:column;gap:12px}
+  .opt{appearance:none;text-align:left;font:inherit;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:center;background:var(--card);padding:14px;cursor:pointer;color:var(--ink);transition:transform .12s, box-shadow .12s}
+  .opt:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111}
+  .opt .k{width:36px;height:36px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;text-transform:uppercase}
+  .opt .d{font-size:13px;color:var(--muted);display:block;margin-top:2px}
+  .opt:disabled{opacity:.55;cursor:not-allowed;box-shadow:none;background:repeating-linear-gradient(-45deg,#fff 0 8px,#f3e2dc 8px 16px)}
+
+  .wallet{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pot{background:var(--card);padding:12px}
+  .pot .lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .pot .v{font-family:var(--mono);font-weight:600;font-size:17px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+  .tip{background:var(--card);padding:14px 16px;font-size:15px}
+  .tip b{display:block;margin-bottom:4px;color:var(--red)}
+  .delta{font-family:var(--mono);font-size:30px;font-weight:600}
+
+  .final-hero{background:#111;color:#fff;border-radius:14px;box-shadow:6px 6px 0 var(--red);padding:22px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+  .final-hero svg{position:absolute;right:-60px;top:-40px;width:260px;height:200px;pointer-events:none}
+  .final-hero .big{font-family:var(--mono);font-size:40px;font-weight:600;color:var(--salmon);line-height:1}
+  .tier{display:flex;flex-direction:column;gap:6px}
+  .tiers{display:flex;flex-direction:column;gap:10px}
+  .tr{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px 12px;background:var(--card);font-size:14px}
+  .tr.on{background:#111;color:#fff;font-weight:700}
+  .tr .mono{font-size:12px}
+  .bar{display:flex;height:16px;border-radius:999px;overflow:hidden;background:#eee;border:2px solid #111}
+  .bar span{display:block;height:100%}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .gtag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:#fff}
+  .persona{display:flex;flex-direction:column;gap:10px}
+  .persona .name{font-size:28px;font-weight:900;font-stretch:118%;line-height:1}
+  .traits{display:flex;flex-direction:column;gap:6px}
+  .trait{display:grid;grid-template-columns:96px 1fr 40px;gap:8px;align-items:center;font-size:13px}
+  .trait .track{height:10px;border-radius:999px;background:#eee;overflow:hidden}
+  .trait .track span{display:block;height:100%}
+  .prize{background:var(--red);color:#fff;border-radius:14px;border:2px solid #111;box-shadow:4px 4px 0 #111;padding:18px;display:flex;flex-direction:column;gap:6px}
+  .prize b{font-size:20px;font-stretch:110%}
+
+  /* dolní lišta: jeden pruh rozdělený podle bodů tří typů */
+  .typebar{position:sticky;bottom:0;z-index:5;display:flex;background:#111;border-top:2px solid #111}
+  .tb{flex:var(--g) 1 0;background:var(--tc);display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;min-width:0;transition:flex-grow .6s ease-out}
+  .tb + .tb{border-left:2px solid #111}
+  .tb .num{font-family:var(--mono);font-size:20px;font-weight:600;color:#fff;line-height:1}
+  .tb .nm{font-size:12px;font-weight:700;letter-spacing:.04em;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+  .fade{animation:fade .28s ease-out}
+  @keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.fade,.scanline{animation:none}.tb,.opt{transition:none}}
+
+  /* popis projektu */
+  .brief{display:flex;flex-direction:column;gap:18px;min-width:0}
+  .b-head{display:flex;flex-direction:column;gap:12px;padding-bottom:6px}
+  .b-title{font-size:clamp(40px,6vw,64px);line-height:.92;font-weight:900;font-stretch:125%;letter-spacing:-.02em;color:#111}
+  .b-lead{font-size:19px;line-height:1.5;max-width:62ch}
+  .b-note{font-size:14px;color:var(--muted);max-width:62ch}
+  .b-sec{background:#fff;border:2px solid #111;border-radius:16px;box-shadow:5px 5px 0 #111;padding:20px 22px;display:flex;flex-direction:column;gap:10px}
+  .b-sec h2{display:flex;align-items:center;gap:12px;font-size:22px}
+  .b-n{flex:none;width:34px;height:34px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-size:17px;font-stretch:100%}
+  .b-sec h3{margin:6px 0 0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+  .b-sec ul,.b-sec ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;line-height:1.5;max-width:68ch}
+  .b-sec li::marker{color:var(--red);font-weight:800}
+  .pill{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:2px}
+  .pill.done{background:var(--good);color:#fff}
+  .b-small{font-size:14px;color:var(--muted);max-width:68ch}
+  .decide{background:#fff4ef;border:2px dashed var(--red);border-radius:12px;padding:10px 14px}
+  .b-sec code{font-family:var(--mono);font-size:.9em;background:#f6efec;padding:1px 5px;border-radius:4px}
+  .team .who{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:8px 0;border-top:1px solid #eadbd5}
+  .team .who span:first-child{font-weight:800}
+</style>
+
+<div class="wrap">
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="ribbon">UKÁZKA</div>
+    <header>
+      <span class="logo">VŠCHT<small>PRAHA</small></span>
+      <div class="hdr-age" id="hdrAge"></div>
+      <div class="hdr-wallet"><div class="lbl">Tvůj majetek</div><div class="val" id="hdrMoney">0 Kč</div></div>
+    </header>
+    <main id="app"></main>
+    <nav class="typebar" id="typebar" hidden aria-label="Tvůj typ"></nav>
+  </div>
+</div>
+<section class="brief">
+  <div class="b-head">
+    <div class="eyebrow">Den otevřených dveří VŠCHT · 21. 11. 2026 · Holešovice, Jankovcova</div>
+    <h1 class="b-title">Od kapesného<br>k důchodu</h1>
+    <p class="b-lead">Mobilní hra pro terénní část dne otevřených dveří. Uchazeč projde 10 stanovišť, na každém prožije kus života a rozhodne, co udělá s penězi. Na konci uvidí, jak se mu bude žít v důchodu a jaký je typ.</p>
+    <p class="b-note">Vedle je klikací ukázka. Stanoviště odemkneš tlačítkem „simulovat naskenování“. Texty stanovišť jsou zatím pracovní, finální připravují Yulie a Jana.</p>
+  </div>
+
+  <article class="b-sec">
+    <h2><span class="b-n">1</span>Co má aplikace umět</h2>
+    <h3>Pro uchazeče</h3>
+    <ul>
+      <li>Spustí se naskenováním QR kódu, <b>bez instalace a bez osobních údajů</b>. Hráč dostane anonymní kód (DOD-XXXX).</li>
+      <li>Provede ho <b>10 stanovišti v pevném pořadí</b> od 8 do 65 let. Každé se odemkne až QR kódem na místě, takže nejde přeskakovat.</li>
+      <li>Na stanovišti ukáže <b>krátký příběh a jednu otázku a/b/c</b>. Body jsou peníze: utratit, dát do prasátka, na účet, investovat, nebo podnikat. Podnikání může vyjít i nevyjít.</li>
+      <li>Mezi stanovišti běží čas: <b>inflace ujídá prasátko, investice rostou</b>. Hráč vidí, co jeho volby udělaly.</li>
+      <li>Dolní lišta ukazuje průběžně, ke kterému typu hráč patří: <b>Požitkář, Střadatel, nebo Podnikavec</b>.</li>
+      <li>Na konci ukáže <b>majetek, úroveň důchodu, podle které dostane cenu, a charakteristiku</b> hráče.</li>
+      <li>Po zavření prohlížeče se hra obnoví podle kódu.</li>
+    </ul>
+    <h3>Pro organizátory</h3>
+    <ul>
+      <li>Živý přehled hráčů a výsledků, <b>export do Excelu</b>.</li>
+      <li>Stránka s <b>QR kódy k tisku</b> pro všech 10 stanovišť a pro úkol se studentem na stanovišti 5.</li>
+      <li>Body počítá server, takže výsledek nejde ovlivnit úpravou stránky v telefonu.</li>
+    </ul>
+  </article>
+
+  <article class="b-sec">
+    <h2><span class="b-n">2</span>Proč ji potřebujeme</h2>
+    <ul>
+      <li><b>Prohlídka okolí s cílem.</b> Uchazeči nejdou trasou jen proto, že musí, ale protože je táhne příběh.</li>
+      <li><b>Odnesou si něco užitečného.</b> Inflace, složené úročení, cena splátek nebo rezerva jsou látka finanční gramotnosti, kterou uchazeč za 10 rozhodnutí sám zažije.</li>
+      <li><b>Zůstane jim vzpomínka na VŠCHT.</b> Výsledek a typ se dají vyfotit a sdílet, a ceny motivují dojít až do konce.</li>
+      <li><b>Méně práce pro organizátory.</b> Odpadne papírování i ruční sčítání bodů a ceny se určí automaticky.</li>
+      <li><b>Data pro příští rok.</b> Víme, kolik lidí hrálo a dohrálo a kde odpadali. Vše anonymně.</li>
+    </ul>
+  </article>
+
+  <article class="b-sec">
+    <h2><span class="b-n">3</span>Jak bude testována</h2>
+    <ol class="steps">
+      <li><b>Automatický test logiky</b> <span class="pill done">hotovo</span><br>Počítač odehrál 3 celé hry, každou za jiný typ hráče. Ověřilo se pořadí stanovišť, odmítnutí cizího QR, nemožnost odpovídat dvakrát, úkol s obsluhou, náhoda u podnikání, výpočet důchodu i export.</li>
+      <li><b>Kontrola obsahu týmem</b><br>Tým schválí příběhy, částky a tipy, aby byly fakticky správně a srozumitelné pro maturanty.</li>
+      <li><b>Test na telefonech</b><br>Projdeme hru na iPhonech i Androidech v různých prohlížečích, včetně malých displejů.</li>
+      <li><b>Generálka v Jankovcově</b><br>S vytištěnými QR kódy projdeme celou trasu. Ověříme signál, čitelnost QR na slunci i ve tmě a čas mezi stanovišti.</li>
+      <li><b>Pilot s lidmi mimo tým</b><br>Hru dáme zahrát několika studentům, kteří ji neznají, a podle zpětné vazby upravíme texty.</li>
+      <li><b>Zátěžový test</b><br>Nasimulujeme očekávaný počet hráčů najednou, aby server v den akce nezpomalil.</li>
+    </ol>
+    <p class="b-small">Záložní plán pro den akce: kód stanoviště jde zadat i ručně, kdyby QR nešel načíst. Databáze se během akce zálohuje.</p>
+  </article>
+
+  <article class="b-sec">
+    <h2><span class="b-n">4</span>Kdo ji po projektu převezme</h2>
+    <p class="decide"><b>K rozhodnutí.</b> Navrhujeme organizátory DOD na VŠCHT. Potvrdíme na schůzce.</p>
+    <p>Předáme kompletní balíček:</p>
+    <ul>
+      <li>zdrojový kód v repozitáři na GitHubu (převod na účet školy),</li>
+      <li>návod ke spuštění a úpravám v češtině, psaný pro lidi, kteří neprogramují,</li>
+      <li>přístupy: hosting, heslo do přehledu organizátorů a tajný klíč pro QR kódy,</li>
+      <li>výsledky letošního ročníku (export do Excelu).</li>
+    </ul>
+    <p class="b-small">Hosting teď běží na studentském kreditu člena týmu. Po předání je potřeba ho převést na účet školy, nebo na jiného správce.</p>
+  </article>
+
+  <article class="b-sec">
+    <h2><span class="b-n">5</span>Jak ji použít na dalších DOD</h2>
+    <ul>
+      <li><b>Obsah se mění v jednom souboru.</b> Příběhy, otázky, částky, ceny i počet stanovišť jsou v <code>questions.js</code> a design ani server se kvůli tomu měnit nemusí.</li>
+      <li><b>Nové QR kódy na každý ročník.</b> Změnou jednoho tajného klíče vzniknou nové kódy a ty loňské přestanou platit.</li>
+      <li><b>Čistý start.</b> Každý ročník má vlastní databázi, výsledky se archivují exportem.</li>
+      <li><b>Jiná trasa, stejná hra.</b> Stanoviště nejsou vázaná na konkrétní místo, stačí přelepit QR kódy jinde.</li>
+      <li><b>Jiné téma.</b> Kostra (stanoviště, volby a/b/c, typy hráčů, vyhodnocení) unese i jiný příběh, třeba cestu chemika od laboratoře k vlastní firmě.</li>
+      <li><b>Nízké náklady.</b> Žádné licence ani aplikace v obchodě. Mezi akcemi jde hosting vypnout.</li>
+    </ul>
+  </article>
+
+  <article class="b-sec team">
+    <h2>Tým a odpovědnosti</h2>
+    <div class="who"><span>Adam</span><span>aplikace, grafika na sociální sítě</span></div>
+    <div class="who"><span>Yulie, Jana</span><span>texty stanovišť, mapa k příběhu</span></div>
+    <div class="who"><span>Vojta</span><span>sponzor a ceny do soutěže, propagace</span></div>
+  </article>
+</section>
+
+</div>
+
+<script>
+const COLORS = { piggy:'#ef8364', bank:'#111111', invest:'#e64010', spent:'#d9d9d9' };
+const NAMES  = { piggy:'Prasátko', bank:'Spořicí účet', invest:'Investice (ETF)', spent:'Utraceno' };
+// roční zhodnocení v herním zjednodušení (v dnešních penězích)
+const RATE   = { piggy:-0.02, bank:0.01, invest:0.06 };
+
+const GROUPS = {
+  p:{ name:'Požitkář',   color:'#f2a33a', motto:'Žiju teď',
+      text:'Peníze jsou pro tebe hlavně prostředek, jak si užít život. Umíš si udělat radost a nebojíš se utratit. Pozor jen, aby ti na stáří něco zbylo: i malá pravidelná částka stranou dělá za 40 let velký rozdíl.' },
+  s:{ name:'Střadatel',  color:'#4a8af0', motto:'Jistota především',
+      text:'Jsi opatrný a rozvážný. Máš rezervu a dluhy ti nahánějí strach. Tvoje peníze jsou v bezpečí, jen rostou pomalu. Zkus část úspor dlouhodobě investovat, ať ti inflace neujídá.' },
+  r:{ name:'Podnikavec', color:'#e64010', motto:'Riskuju, aby to rostlo',
+      text:'Vidíš příležitosti tam, kde ostatní ne, a nebojíš se riskovat. Díky tomu ti peníze můžou růst nejrychleji. Nezapomínej ale na rezervu pro horší časy, ne každá sázka vyjde.' }
+};
+
+const STATIONS = [
+  { age:8,  title:'První kapesné', income:50,
+    story:'Je ti 8 let. Babička ti k narozeninám dala první kapesné, padesátikorunu. Cestou domů jdete kolem cukrárny.',
+    q:'Co uděláš s padesátikorunou?',
+    opts:[
+      {g:'s', t:'Hodím ji do prasátka', d:'Doma v poličce', to:{piggy:1}},
+      {g:'p', t:'Koupím si zmrzlinu', d:'Hned a s radostí', to:{spent:1}},
+      {g:'r', t:'Koupím semínka, vypěstuju bylinky a prodám je sousedům', d:'Může vynést víc, ale taky nemusí vyrůst nic', risk:{p:.75, win:150}} ],
+    tip:['Prasátko vs. účet','Peníze v prasátku se neztratí, ale kvůli inflaci si za ně za pár let koupíš méně.'] },
+  { age:12, title:'Příležitost: nošení dřeva', income:100,
+    story:'Soused potřebuje přenosit dřevo do kůlny. Po dvou hodinách práce ti dá stovku.',
+    q:'Co s vydělanou stovkou?',
+    opts:[
+      {g:'p', t:'Koupím si novou hru do mobilu', to:{spent:1}},
+      {g:'r', t:'Koupím z bazaru rozbité kolo, opravím ho a prodám', d:'Když se to povede, vyděláš', risk:{p:.75, win:400}},
+      {g:'s', t:'Uložím ji na dětský spořicí účet', to:{bank:1}} ],
+    tip:['První vlastní výdělek','Peníze, které si vyděláš prací, jsou aktivní příjem. Zkus si z každého příjmu nejdřív kousek odložit a teprve pak utrácet.'] },
+  { age:16, title:'První brigáda ve fastfoodu', income:4800,
+    story:'O prázdninách jsi na brigádě ve fastfoodu. Za 40 odpracovaných hodin po 120 Kč máš 4 800 Kč.',
+    q:'Jak naložíš s první výplatou?',
+    opts:[
+      {g:'r', t:'Koupím použitý foťák a budu fotit na zakázku', d:'Plesy, oslavy, sociální sítě', risk:{p:.7, win:12000}},
+      {g:'s', t:'Celou výplatu na spořicí účet', to:{bank:1}},
+      {g:'p', t:'Nové boty a oblečení', to:{spent:1}} ],
+    tip:['Pravidlo 50/30/20','Oblíbené pravidlo říká: 50 % příjmu na nutné výdaje, 30 % na to, co tě baví, a 20 % na spoření.'] },
+  { age:20, title:'Práce při studiu', income:24000,
+    story:'Studuješ na VŠCHT a vedle školy pracuješ v laboratoři za 200 Kč/h. Za semestr ti zbylo 24 000 Kč.',
+    q:'Kamarádi mají nový telefon. Co uděláš?',
+    opts:[
+      {g:'p', t:'Koupím telefon za 24 000 Kč na splátky', d:'Na úrocích přeplatíš 6 000 Kč', to:{spent:1}, debt:6000},
+      {g:'s', t:'Založím si nouzovou rezervu na účtu', d:'Pro případ nečekaných výdajů', to:{bank:1}},
+      {g:'r', t:'Rozjedu s kamarádem e-shop s vlastními tričky', d:'Podnikání: velká šance, velké riziko', risk:{p:.6, win:60000}} ],
+    tip:['Splátky jsou drahé','Nákup na splátky znamená, že za stejnou věc zaplatíš víc. Nouzová rezerva ve výši 3–6 měsíčních výdajů tě podrží, když se něco pokazí.'] },
+  { age:22, title:'Příležitostný přivýdělek', income:500, task:true,
+    story:'Na stanovišti tě čeká úkol od studentů. Když ho splníš, organizátor ti ukáže speciální QR kód a dostaneš odměnu 500 Kč.',
+    q:'Úkol splněn. Kam dáš odměnu?',
+    opts:[
+      {g:'s', t:'Na spořicí účet', to:{bank:1}},
+      {g:'r', t:'Půjčím ji kamarádovi na start-up za malý podíl ve firmě', d:'Většina start-upů neuspěje', risk:{p:.5, win:2500}},
+      {g:'p', t:'Utratím ji za večer ve městě', to:{spent:1}} ],
+    tip:['Bonusy a přivýdělky','Nečekané peníze se utrácejí nejsnáz. Když je rovnou uložíš, ani ti nebudou chybět.'] },
+  { age:24, title:'Kurz o investování', income:0, quiz:true,
+    story:'Škola pořádá dobrovolný kurz o investování. Kdo správně odpoví na kontrolní otázku, získá bonus 2 000 Kč. Po kurzu můžeš peníze nově ukládat i do akcií a ETF.',
+    q:'Co je ETF?',
+    opts:[
+      {t:'Spořicí účet s pevným úrokem garantovaným státem'},
+      {t:'Fond, který kupuje najednou akcie mnoha firem', ok:true},
+      {t:'Druh kryptoměny'} ],
+    tip:['Diverzifikace','ETF rozloží tvoje peníze mezi stovky firem, takže neztratíš všechno, když se jedné nedaří. Dlouhodobě akciové ETF rostly rychleji než spořicí účty, ale jejich hodnota kolísá.'] },
+  { age:25, title:'Práce na plný úvazek', income:900000,
+    story:'Nastupuješ jako chemik do firmy. Každý měsíc ti po zaplacení nájmu a jídla zbyde 5 000 Kč. Za 15 let to dělá 900 000 Kč.',
+    q:'Co budeš s volnými penězi dělat?',
+    opts:[
+      {g:'p', t:'Užívat si: dražší auto, dovolené', to:{spent:1}},
+      {g:'r', t:'Pravidelně investovat do ETF', to:{invest:1}, needs:'invest'},
+      {g:'s', t:'Posílat je na spořicí účet', to:{bank:1}} ],
+    tip:['Složené úročení','Výnos, který investice vydělá, se dál zhodnocuje. Čím dřív začneš, tím víc za tebe pracuje čas.'] },
+  { age:40, title:'Ředitel firmy', income:2000000,
+    story:'Povýšili tě na ředitele s platem 150 000 Kč měsíčně. Za dalších 15 let ti zbyde 2 miliony korun.',
+    q:'Jak naložíš s vyšším příjmem?',
+    opts:[
+      {g:'s', t:'Na spořicí účet', to:{bank:1}},
+      {g:'p', t:'Luxusní vila a sportovní auto', to:{spent:1}},
+      {g:'r', t:'Investovat a žít skromněji', to:{invest:1}, needs:'invest'} ],
+    tip:['Inflace životního stylu','Když s vyšším platem rostou i výdaje, nezbývá ti víc než dřív. Bohatství neurčuje plat, ale to, kolik z něj ti zůstane.'] },
+  { age:55, title:'Poloviční úvazek', income:300000,
+    story:'Zpomaluješ a pracuješ na poloviční úvazek. Do důchodu ti zbyde ještě 300 000 Kč.',
+    q:'Co s posledními úsporami před důchodem?',
+    opts:[
+      {g:'r', t:'Investovat', to:{invest:1}, needs:'invest'},
+      {g:'p', t:'Procestovat svět', to:{spent:1}},
+      {g:'s', t:'Na spořicí účet', to:{bank:1}} ],
+    tip:['Blíž k důchodu, míň rizika','Před důchodem se vyplatí přesouvat část investic do bezpečnějších produktů, aby tě pokles trhu nezaskočil těsně před tím, než peníze budeš potřebovat.'] },
+  { age:65, title:'Důchod', final:true }
+];
+
+const TIERS = [
+  { min:8000000, t:'Vlastní dům a renta z dividend', d:'Žiješ z výnosů svých investic a peníze ti ještě rostou.', prize:'Hlavní cena' },
+  { min:2500000, t:'Vlastní byt a klidný důchod', d:'Máš rezervu, občas si dopřeješ výlet.', prize:'Střední cena' },
+  { min:500000,  t:'Skromný důchod v nájmu', d:'Vyjdeš, ale na nečekané výdaje nezbývá moc.', prize:'Malá cena' },
+  { min:-Infinity, t:'Domov důchodců na dávkách', d:'Jsi odkázaný na státní důchod a dávky.', prize:'Účastnická drobnost' }
+];
+
+let S;
+function reset(){ S={ i:0, piggy:0, bank:0, invest:0, spent:0, types:{p:0,s:0,r:0}, unlocked:{}, code:'DOD-'+Math.floor(1000+Math.random()*9000), elapsed:null, started:false }; }
+reset();
+
+const fmt = n => (n<0?'−':'') + Math.round(Math.abs(n)).toLocaleString('cs-CZ') + ' Kč';
+const total = () => S.piggy + S.bank + S.invest;
+const $app = document.getElementById('app');
+const $phone = document.getElementById('phone');
+
+function header(){
+  document.getElementById('hdrMoney').textContent = fmt(total());
+  const st = STATIONS[Math.min(S.i, STATIONS.length-1)];
+  document.getElementById('hdrAge').textContent = S.started ? `${st.age} let · ${S.code}` : '';
+}
+function typebar(){
+  const el = document.getElementById('typebar');
+  el.hidden = !S.started;
+  el.innerHTML = ['p','s','r'].map(k=>{
+    const g = GROUPS[k], n = S.types[k];
+    return `<div class="tb" style="--tc:${g.color};--g:${n+1}"><span class="num">${n}</span><span class="nm">${g.name}</span></div>`;
+  }).join('');
+}
+function render(html){ $app.innerHTML = `<div class="fade" style="display:flex;flex-direction:column;gap:18px">${html}</div>`; header(); typebar(); $phone.scrollTop = 0; }
+
+function ellipseSVG(stroke){ return `<svg viewBox="0 0 260 180" aria-hidden="true"><ellipse cx="150" cy="80" rx="120" ry="62" fill="none" stroke="${stroke}" stroke-width="2" transform="rotate(-14 150 80)"/><ellipse cx="150" cy="80" rx="96" ry="44" fill="none" stroke="${stroke}" stroke-width="1" opacity=".5" transform="rotate(-14 150 80)"/></svg>`; }
+
+function vIntro(){
+  S.started=false;
+  render(`
+    <div class="ellipse-hero">
+      ${ellipseSVG('#e64010')}
+      <div class="eyebrow">Den otevřených dveří · Holešovice, Jankovcova</div>
+      <h1 style="margin-top:10px">Od kapesného<br>k důchodu</h1>
+    </div>
+    <p class="story">Projdi celý život v 10 zastávkách. Na každé tě čeká kus příběhu a jedna otázka, co uděláš s penězi. Na konci uvidíš, jak se ti bude žít v důchodu a jaký jsi typ.</p>
+    <div class="card"><div class="timeline">
+      ${STATIONS.map(s=>`<div class="tl-age">${s.age}</div><div class="tl-t">${s.title}</div>`).join('')}
+    </div></div>
+    <div class="rules">
+      <div class="rule"><span class="ico">QR</span><div><b>Stanoviště jdou popořadě</b><span class="muted">Každé se odemkne až po naskenování QR na místě, stejně jako jdou po sobě roky života.</span></div></div>
+      <div class="rule"><span class="ico">Kč</span><div><b>Body jsou peníze</b><span class="muted">Tvoje volby rozhodnou, kolik ti zůstane a jak ti peníze porostou.</span></div></div>
+      <div class="rule"><span class="ico">?</span><div><b>Jaký jsi typ?</b><span class="muted">Každá odpověď tě posune k jednomu typu: <b style="color:#c47a12">Požitkář</b>, <b style="color:${GROUPS.s.color}">Střadatel</b>, nebo <b style="color:${GROUPS.r.color}">Podnikavec</b>.</span></div></div>
+      <div class="rule"><span class="ico">65</span><div><b>Cenu určí tvůj důchod</b><span class="muted">Čím lépe se ti bude žít, tím lepší cenu si vyzvedneš.</span></div></div>
+    </div>
+    <button class="btn" onclick="vCode()">Začít hru</button>
+    <button class="linkbtn" onclick="demoFinish()">Ukázka: přeskočit rovnou na důchod s náhodnými volbami</button>
+  `);
+}
+
+function vCode(){
+  S.started=true;
+  render(`
+    <div class="eyebrow">Tvůj hrací kód</div>
+    <div class="card" style="align-items:center;padding:28px 18px">
+      <div class="mono" style="font-size:40px;font-weight:600;letter-spacing:.06em">${S.code}</div>
+      <p class="muted" style="text-align:center">Zapiš si ho nebo vyfoť. Kdyby se ti zavřel prohlížeč, hru s ním obnovíš.</p>
+    </div>
+    <div class="card"><p><b>Startovní kapitál: 0 Kč.</b> Je ti 8 let a nemáš nic. Dole na liště uvidíš, k jakému typu tě tvoje odpovědi posouvají.</p></div>
+    <button class="btn" onclick="vRoute()">Ukázat trasu</button>
+  `);
+}
+
+function mapSVG(){
+  // schéma okolí ulice Jankovcova, skutečné body doplníme po obhlídce
+  const pts=[[40,238],[88,214],[136,196],[184,178],[232,160],[280,142],[322,118],[300,78],[248,70],[196,62]];
+  const path = pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  const dots = pts.map((p,i)=>{
+    const st = i<S.i?'done':i===S.i?'cur':'locked';
+    const fill = st==='done'?'#111':st==='cur'?'#e64010':'#fff';
+    const stroke = st==='locked'?'#bdb4b0':fill;
+    const txt = st==='locked'?'#8a817d':'#fff';
+    const pulse = st==='cur'?`<ellipse cx="${p[0]}" cy="${p[1]}" rx="22" ry="16" fill="none" stroke="#e64010" stroke-width="2" opacity=".45"/>`:'';
+    return `${pulse}<circle cx="${p[0]}" cy="${p[1]}" r="13" fill="${fill}" stroke="${stroke}" stroke-width="2"/><text x="${p[0]}" y="${p[1]+4.5}" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" font-weight="600" fill="${txt}">${i+1}</text>`;
+  }).join('');
+  const donePath = pts.slice(0,S.i+1).map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ');
+  return `<svg viewBox="0 0 370 290" role="img" aria-label="Schéma trasy podél ulice Jankovcova">
+    <rect x="8" y="8" width="354" height="274" rx="12" fill="#faf7f6"/>
+    <path d="M 10 262 L 360 130" stroke="#e7dfdc" stroke-width="22" stroke-linecap="round"/>
+    <text x="150" y="232" font-size="11" fill="#8a817d" font-family="Archivo, sans-serif" transform="rotate(-20.6 150 232)" letter-spacing="1.5">JANKOVCOVA</text>
+    <path d="${path}" fill="none" stroke="#cfc6c2" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+    <path d="${donePath}" fill="none" stroke="#111" stroke-width="3" stroke-linecap="round"/>
+    ${dots}
+  </svg>`;
+}
+function vRoute(){
+  const rows = STATIONS.map((s,i)=>{
+    const st = i<S.i?'done':i===S.i?'cur':'locked';
+    const right = st==='done'?'hotovo':st==='cur'?'teď':'🔒';
+    return `<div class="st ${st}"><span class="n">${i+1}</span><div><div class="t">${st==='locked'?'Zatím zamčeno':s.title}</div><div class="s">${s.age} let</div></div><span class="r">${right}</span></div>`;
+  }).join('');
+  render(`
+    <div><div class="eyebrow">Trasa · ${S.i}/10 hotovo</div><h2 style="margin-top:6px">Další zastávka: ${STATIONS[S.i].age} let</h2></div>
+    <div class="map">${mapSVG()}</div>
+    <p class="muted" style="font-size:13px;margin-top:-8px">Schéma je orientační, přesná místa v okolí Jankovcovy doplníme.</p>
+    <button class="btn" onclick="vScan()">Jsem na stanovišti ${S.i+1}, skenovat QR</button>
+    <div class="stations">${rows}</div>
+  `);
+}
+
+function vScan(){
+  render(`
+    <div><div class="eyebrow">Stanoviště ${S.i+1}</div><h2 style="margin-top:6px">Naskenuj QR kód na místě</h2></div>
+    <div class="scan"><span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span><span class="scanline"></span><span class="hint">Ve skutečnosti hráč naskenuje QR fotoaparátem v mobilu a stanoviště se samo odemkne</span></div>
+    <button class="btn" onclick="arrive()">Ukázka: simulovat naskenování</button>
+    <div class="manual"><label for="manualCode" style="position:absolute;left:-9999px">Kód stanoviště</label><input id="manualCode" placeholder="Nebo zadej kód z cedule"><button class="btn ghost" style="width:auto;padding:12px 18px" onclick="arrive()">OK</button></div>
+    <button class="linkbtn" onclick="vRoute()">Zpět na trasu</button>
+  `);
+}
+
+function growTo(i){
+  const prev = STATIONS[i-1]; if(!prev) return null;
+  const y = STATIONS[i].age - prev.age, before={piggy:S.piggy,bank:S.bank,invest:S.invest};
+  for(const k of ['piggy','bank','invest']) S[k] *= Math.pow(1+RATE[k], y);
+  return { y, before };
+}
+function arrive(){
+  const st = STATIONS[S.i];
+  S.elapsed = growTo(S.i);
+  st.final ? vFinal() : (st.task ? vTask() : vStation());
+}
+function elapsedBox(){
+  if(!S.elapsed) return '';
+  const {y,before}=S.elapsed;
+  const rows = ['piggy','bank','invest'].filter(k=>Math.abs(before[k])>0.5).map(k=>{
+    const d = S[k]-before[k];
+    return `<div class="row"><span>${NAMES[k]}</span><span style="color:${d<0?'var(--bad)':'var(--good)'}">${d<0?'':'+'}${fmt(d)}</span></div>`;
+  }).join('');
+  return `<div class="elapsed"><b>Mezitím uplynulo ${y} ${y===1?'rok':y<5?'roky':'let'}.</b>${rows||'<span class="muted">Zatím nemáš žádné úspory, které by se mohly zhodnotit.</span>'}</div>`;
+}
+
+function vTask(){
+  const st = STATIONS[S.i];
+  render(`
+    <span class="age-badge">Je ti <span class="mono">${st.age}</span> let</span>
+    <h2>${st.title}</h2>
+    ${elapsedBox()}
+    <p class="story">${st.story}</p>
+    <div class="card"><div class="eyebrow">Úkol</div><p>Tady bude zadání interaktivního úkolu, který připraví tým stanoviště.</p></div>
+    <button class="btn" onclick="vStation(true)">Ukázka: organizátor potvrdil splněný úkol</button>
+  `);
+}
+
+function vStation(skipElapsed){
+  const st = STATIONS[S.i];
+  const opts = st.opts.map((o,j)=>{
+    const locked = o.needs && !S.unlocked[o.needs];
+    return `<button class="opt" ${locked?'disabled':''} onclick="choose(${j})"><span class="k">${'abc'[j]}</span><span>${o.t}${locked?'<span class="d">🔒 Odemkneš na kurzu o investování (stanoviště 6)</span>':o.d?`<span class="d">${o.d}</span>`:''}</span></button>`;
+  }).join('');
+  render(`
+    <span class="age-badge">Je ti <span class="mono">${st.age}</span> let</span>
+    <h2>${st.title}</h2>
+    ${skipElapsed?'':elapsedBox()}
+    ${st.task?'':`<p class="story">${st.story}</p>`}
+    ${st.income?`<div class="income"><span class="lbl">Máš k dispozici</span><span class="v">${fmt(st.income)}</span></div>`:''}
+    <p class="q">${st.q}</p>
+    <div class="opts">${opts}</div>
+  `);
+}
+
+function apply(st, o){
+  if(st.quiz){
+    S.unlocked.invest = true;
+    if(o.ok){ S.bank += 2000; return { gain:2000, msg:'Správně! Bonus 2 000 Kč jde na tvůj účet.' }; }
+    return { gain:0, msg:'Tohle není správně. ETF je fond, který kupuje akcie mnoha firem najednou.' };
+  }
+  if(o.g) S.types[o.g]++;
+  if(o.risk){
+    if(Math.random() < o.risk.p){ S.bank += o.risk.win; return { gain:o.risk.win-st.income, msg:`Vyšlo to! Místo ${fmt(st.income)} máš ${fmt(o.risk.win)}. Výdělek jde na účet.` }; }
+    S.spent += st.income; return { gain:-st.income, msg:`Tentokrát to nevyšlo a o ${fmt(st.income)} jsi přišel/přišla. Riziko k podnikání patří.` };
+  }
+  for(const k in o.to) S[k] += st.income * o.to[k];
+  if(o.debt){ S.bank -= o.debt; S.spent += o.debt; }
+  const saved = st.income*(1-(o.to.spent||0)) - (o.debt||0);
+  return { gain:saved, msg: saved>0 ? `Odložil(a) sis ${fmt(saved)}.` : saved<0 ? `Tahle volba tě stála o ${fmt(-saved)} víc, než jsi měl(a). Dluh se odečte z účtu.` : 'Všechno jsi utratil(a). Užij si to!' };
+}
+function choose(j){
+  const st = STATIONS[S.i], o = st.opts[j];
+  const r = apply(st, o);
+  S.i++;
+  vResult(st, o, r);
+}
+
+function vResult(st, o, {gain, msg}){
+  const pots = ['piggy','bank','invest','spent'].map(k=>`<div class="pot"><div class="lbl"><span class="dot" style="background:${COLORS[k]}"></span>${NAMES[k]}</div><div class="v" style="${S[k]<0?'color:var(--bad)':''}">${fmt(S[k])}</div></div>`).join('');
+  const g = o.g && GROUPS[o.g];
+  render(`
+    <div class="eyebrow">Stanoviště ${S.i} splněno</div>
+    <div class="card">
+      <div class="muted" style="font-size:14px">Tvoje volba: ${o.t}</div>
+      <div class="delta" style="color:${gain>0?'var(--good)':gain<0?'var(--bad)':'var(--ink)'}">${gain>0?'+':''}${fmt(gain)}</div>
+      <p>${msg}</p>
+      ${g?`<p style="font-size:14px">Bod pro typ <span class="gtag" style="background:${g.color}">${g.name}</span></p>`:''}
+    </div>
+    <div class="tip"><b>${st.tip[0]}</b>${st.tip[1]}</div>
+    <div><div class="eyebrow" style="margin-bottom:8px">Tvoje peníze</div><div class="wallet">${pots}</div></div>
+    <button class="btn" onclick="vRoute()">Pokračovat na stanoviště ${S.i+1}</button>
+  `);
+}
+
+function persona(){
+  const sum = S.types.p+S.types.s+S.types.r || 1;
+  const order = ['p','s','r'].sort((a,b)=>S.types[b]-S.types[a]);
+  const top = order[0], second = order[1];
+  const mixed = S.types[top] === S.types[second];
+  const g = GROUPS[top];
+  const traits = ['p','s','r'].map(k=>`<div class="trait"><span>${GROUPS[k].name}</span><span class="track"><span style="width:${S.types[k]/sum*100}%;background:${GROUPS[k].color}"></span></span><b class="mono">${Math.round(S.types[k]/sum*100)}%</b></div>`).join('');
+  return `<div class="card persona">
+    <div class="eyebrow">Tvůj typ</div>
+    <div class="name" style="color:${top==='p'?'#c47a12':g.color}">${mixed?`${g.name} × ${GROUPS[second].name}`:g.name}</div>
+    <div class="muted" style="font-weight:700">„${g.motto}“</div>
+    <p>${g.text}</p>
+    <div class="traits">${traits}</div>
+  </div>`;
+}
+function vFinal(){
+  const t = total(), tier = TIERS.find(x=>t>=x.min);
+  const parts = ['piggy','bank','invest'].map(k=>({k,v:Math.max(0,S[k])}));
+  const sum = parts.reduce((a,b)=>a+b.v,0) || 1;
+  const bar = parts.map(p=>`<span style="width:${p.v/sum*100}%;background:${COLORS[p.k]}"></span>`).join('');
+  const legend = parts.map(p=>`<span><i class="dot" style="background:${COLORS[p.k]}"></i>${NAMES[p.k]} <b class="mono">${fmt(p.v)}</b></span>`).join('');
+  const tiers = TIERS.map(x=>`<div class="tr ${x===tier?'on':''}"><span>${x.t}<br><span style="font-size:12px;opacity:.8">${x.prize}</span></span><span class="mono">${x.min===-Infinity?'méně':'od '+fmt(x.min)}</span></div>`).join('');
+  render(`
+    <span class="age-badge">Je ti <span class="mono">65</span> let</span>
+    ${elapsedBox()}
+    <div class="final-hero">
+      ${ellipseSVG('#e64010')}
+      <div class="eyebrow" style="color:var(--salmon)">Důchod · tvůj majetek</div>
+      <div class="big">${fmt(t)}</div>
+      <div class="tier"><b style="font-size:20px;font-stretch:110%">${tier.t}</b><span style="opacity:.8">${tier.d}</span></div>
+    </div>
+    ${persona()}
+    <div class="prize"><span class="eyebrow" style="color:#fff;opacity:.85">Tvoje cena</span><b>${tier.prize}</b><span>Konkrétní ceny doplníme se sponzorem. Hráč ukáže tuhle obrazovku u stánku s cenami.</span></div>
+    <div class="card"><div class="bar">${bar}</div><div class="legend">${legend}</div>
+      <p class="muted" style="font-size:14px">Za život jsi utratil(a) <b class="mono">${fmt(S.spent)}</b>.</p></div>
+    <div><div class="eyebrow" style="margin-bottom:8px">Kde můžeš skončit a jakou dostaneš cenu</div><div class="tiers">${tiers}</div></div>
+    <button class="btn ghost" onclick="reset();vIntro()">Hrát znovu</button>
+  `);
+}
+
+function demoFinish(){
+  reset(); S.started=true;
+  while(!STATIONS[S.i].final){
+    const st=STATIONS[S.i];
+    growTo(S.i);
+    const avail = st.opts.map((o,j)=>j).filter(j=>!(st.opts[j].needs && !S.unlocked[st.opts[j].needs]));
+    apply(st, st.opts[avail[Math.floor(Math.random()*avail.length)]]);
+    S.i++;
+  }
+  arrive();
+}
+
+vIntro();
+</script>
