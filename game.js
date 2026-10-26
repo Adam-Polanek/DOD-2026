@@ -1,19 +1,24 @@
 // ---------------------------------------------------------------------------
-//  PRAVIDLA HRY (běží POUZE na serveru). Obsah (texty, částky) je v questions.js.
+//  PRAVIDLA HRY (běží POUZE na serveru). Obsah (texty, body, Kč) je v questions.js.
 //
-//  Princip: v databázi jsou uložené jen volby hráče (a jestli podnikání vyšlo).
-//  Peníze se z nich pokaždé znovu spočítají funkcí replay(). Díky tomu je stav
-//  vždy konzistentní a nejde ho „rozbít" – stačí opravit pravidla a přepočítá se.
+//  Princip: v databázi jsou uložené jen volby hráče. Metriky, Kč, skupina
+//  (Erasmus / doma) i trasa se z nich pokaždé znovu spočítají funkcí replay().
+//  Díky tomu je stav vždy konzistentní – stačí opravit pravidla a přepočítá se.
 // ---------------------------------------------------------------------------
 import { createHmac } from "node:crypto";
-import { STATIONS, RATE, GROUPS, TIERS } from "./questions.js";
+import {
+  STATIONS, START_KC, ROUTES, GROUP_AFTER, GROUP_INFO, chooseGroup,
+  METRICS, SCORE, BANDS,
+} from "./questions.js";
 
-export { STATIONS, GROUPS, TIERS };
-export const FINAL_INDEX = STATIONS.findIndex((s) => s.final);
+export { STATIONS, METRICS, GROUP_INFO };
+const BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
+const KEYS = ["f", "v", "p"];
+export const ROUTE_LENGTH = ROUTES.erasmus.length;
 
 // ---- QR kódy ---------------------------------------------------------------
-// Každé stanoviště má krátký tajný kód odvozený z QR_SECRET. Kódy tak nejsou
-// napsané v kódu na GitHubu a kdo nezná QR_SECRET, nemůže si je vymyslet.
+// Každé stanoviště (místo) má krátký tajný kód odvozený z QR_SECRET. Kódy tak
+// nejsou napsané v kódu na GitHubu a kdo nezná QR_SECRET, nemůže si je vymyslet.
 // kind "arrive" = QR na stanovišti, "task" = QR, který ukáže obsluha po úkolu.
 const QR_SECRET = process.env.QR_SECRET || "zmen-me-qr";
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // bez 0/O a 1/I
@@ -25,115 +30,162 @@ export function qrToken(stationId, kind = "arrive") {
   return s;
 }
 
-// Najde, ke kterému stanovišti kód patří. Vrací { index, station, kind } nebo null.
+// Najde, ke kterému stanovišti kód patří. Vrací { station, kind } nebo null.
 export function findToken(token) {
   const t = (token || "").toString().trim().toUpperCase();
-  for (let i = 0; i < STATIONS.length; i++) {
-    const st = STATIONS[i];
-    if (qrToken(st.id, "arrive") === t) return { index: i, station: st, kind: "arrive" };
-    if (st.task && qrToken(st.id, "task") === t) return { index: i, station: st, kind: "task" };
+  for (const st of STATIONS) {
+    if (qrToken(st.id, "arrive") === t) return { station: st, kind: "arrive" };
+    if (st.task && qrToken(st.id, "task") === t) return { station: st, kind: "task" };
   }
   return null;
 }
 
-// Seznam všech QR kódů pro organizátory (tisk).
+// Seznam všech QR kódů pro organizátory (tisk). Čísla stanovišť se u Banky
+// a Kanceláří liší podle trasy, proto se tisknou jména míst.
 export function allTokens() {
-  return STATIONS.flatMap((st, i) => {
-    const rows = [{ num: i + 1, id: st.id, title: st.title, kind: "arrive", token: qrToken(st.id, "arrive") }];
-    if (st.task) rows.push({ num: i + 1, id: st.id, title: st.title, kind: "task", token: qrToken(st.id, "task") });
+  return STATIONS.flatMap((st) => {
+    const rows = [{ id: st.id, place: st.place, title: st.title, kind: "arrive", token: qrToken(st.id, "arrive") }];
+    if (st.task) rows.push({ id: st.id, place: st.place, title: st.title, kind: "task", token: qrToken(st.id, "task") });
     return rows;
   });
 }
 
+// ---- Trasa a varianty ------------------------------------------------------
+// Skupina je známá až po odpovědi na GROUP_AFTER. Do té doby je null a trasa
+// se shoduje pro obě skupiny (liší se až za Přístavem).
+export const routeFor = (group) => ROUTES[group || "erasmus"];
+
+// Obsah stanoviště pro danou skupinu (příběh, otázka, možnosti).
+export function stationContent(st, group) {
+  return st.variants ? st.variants[group] : st;
+}
+
+// ---- Podmínky u možností ---------------------------------------------------
+const NEED_NAMES = { kc: "Kč", f: "bodů financí", v: "bodů vzdělání", p: "bodů požitků" };
+const fmt = (n) => Math.round(n).toLocaleString("cs-CZ");
+
+// Vrací null (možnost je volná) nebo text, proč je zamčená.
+export function lockReason(o, S) {
+  for (const [k, min] of Object.entries(o.needs || {})) {
+    const have = k === "kc" ? S.kc : S.m[k];
+    if (have < min) return `Potřebuješ aspoň ${fmt(min)} ${NEED_NAMES[k]}, máš ${fmt(have)}.`;
+  }
+  return null;
+}
+
 // ---- Co smí vidět prohlížeč ------------------------------------------------
-// Bez g, to, risk, debt, ok a bez tipů (ty přijdou až po odpovědi).
+// Přehled míst pro mapu – bez otázek (ty závisí na skupině hráče).
 export function publicStations() {
-  return STATIONS.map((st, i) => ({
-    id: st.id, num: i + 1, age: st.age, title: st.title, income: st.income ?? 0,
-    story: st.story ?? "", q: st.q ?? "", task: !!st.task, taskText: st.taskText ?? "",
-    quiz: !!st.quiz, final: !!st.final,
-    opts: (st.opts || []).map((o) => ({ t: o.t, d: o.d ?? "", needs: o.needs ?? null })),
-  }));
+  return STATIONS.map((st) => ({ id: st.id, place: st.place, title: st.title, final: !!st.final }));
+}
+
+// Aktuální stanoviště tak, jak ho vidí hráč: bez fx, kc a ok,
+// ale s informací, které možnosti má zamčené.
+export function publicStation(st, num, S) {
+  const c = stationContent(st, S.group) || {};
+  return {
+    id: st.id, num, place: st.place, title: st.title, final: !!st.final,
+    task: !!st.task, taskText: st.taskText ?? "",
+    story: c.story ?? "", q: c.q ?? "",
+    opts: (c.opts || []).map((o) => {
+      const why = lockReason(o, S);
+      return { t: o.t, locked: !!why, lockText: why };
+    }),
+    group: st.id === nextAfter(GROUP_AFTER) && S.group ? { id: S.group, ...GROUP_INFO[S.group] } : null,
+  };
+}
+function nextAfter(id) {
+  const r = ROUTES.erasmus;
+  return r[r.indexOf(id) + 1];
 }
 
 export function publicRules() {
   return {
-    groups: GROUPS,
-    tiers: TIERS.map(({ id, min, t, d, prize }) => ({ id, min, t, d, prize })),
+    metrics: METRICS, startKc: START_KC, routeLength: ROUTE_LENGTH,
+    bands: BANDS.map(({ min, t }) => ({ min, t })),
   };
 }
 
-// ---- Výpočet peněz ---------------------------------------------------------
-const emptyState = () => ({
-  piggy: 0, bank: 0, invest: 0, spent: 0,
-  types: { p: 0, s: 0, r: 0 },
-  unlockedInvest: false,
-});
-
-function grow(S, years) {
-  const before = { piggy: S.piggy, bank: S.bank, invest: S.invest };
-  for (const k of ["piggy", "bank", "invest"]) S[k] *= Math.pow(1 + RATE[k], years);
-  return { years, before, after: { piggy: S.piggy, bank: S.bank, invest: S.invest } };
-}
-
-// Provede jednu volbu. `success` je uložený výsledek podnikání (true/false/null).
-// Vrací { gain, outcome } pro zobrazení hráči.
-function applyChoice(S, st, choice, success) {
-  const o = st.opts[choice];
-  if (st.quiz) {
-    S.unlockedInvest = true;
-    if (o.ok) { S.bank += st.bonus || 0; return { gain: st.bonus || 0, outcome: "quiz-ok" }; }
-    return { gain: 0, outcome: "quiz-wrong" };
-  }
-  if (o.g) S.types[o.g]++;
-  if (o.risk) {
-    if (success) { S.bank += o.risk.win; return { gain: o.risk.win - st.income, outcome: "risk-win", win: o.risk.win }; }
-    S.spent += st.income;
-    return { gain: -st.income, outcome: "risk-lose" };
-  }
-  for (const k in o.to) S[k] += st.income * o.to[k];
-  if (o.debt) { S.bank -= o.debt; S.spent += o.debt; }
-  const gain = st.income * (1 - (o.to.spent || 0)) - (o.debt || 0);
-  return { gain, outcome: gain > 0 ? "saved" : gain < 0 ? "debt" : "spent" };
-}
-
-// Přehraje hru od začátku.
-//   choices  = { s1: { choice, success }, s2: … }
-//   arrivedAt = index stanoviště, na které hráč naposledy dorazil (−1 = nikam)
-// Vrací stav peněz a `elapsed` (jak se peníze změnily cestou na arrivedAt).
-export function replay(choices, arrivedAt) {
-  const S = emptyState();
-  let elapsed = null, last = null;
-  for (let i = 0; i <= arrivedAt && i < STATIONS.length; i++) {
-    const st = STATIONS[i];
-    if (i > 0) elapsed = grow(S, st.age - STATIONS[i - 1].age);
+// ---- Výpočet ---------------------------------------------------------------
+// Přehraje hru od začátku podle uložených voleb.
+//   choices = { s1: { choice }, s2: … }
+// Vrací { m: {f,v,p}, kc, group, route, last } – last = výsledek poslední volby.
+export function replay(choices) {
+  const S = { m: { f: 0, v: 0, p: 0 }, kc: START_KC, group: null, last: null };
+  // Trasa se po GROUP_AFTER může změnit, proto se bere vždy podle aktuální skupiny.
+  let i = 0;
+  while (i < ROUTE_LENGTH) {
+    const st = BY_ID[routeFor(S.group)[i]];
     const c = choices[st.id];
-    if (c && !st.final) last = { stationId: st.id, ...applyChoice(S, st, c.choice, c.success) };
+    if (!c || st.final) break;
+    const o = stationContent(st, S.group).opts[c.choice];
+    const before = { ...S.m, kc: S.kc };
+    for (const k of KEYS) S.m[k] += o.fx?.[k] || 0;
+    S.kc += o.kc || 0;
+    S.last = {
+      stationId: st.id, choice: c.choice, choiceText: o.t, result: o.r ?? "",
+      fx: { f: S.m.f - before.f, v: S.m.v - before.v, p: S.m.p - before.p },
+      kc: S.kc - before.kc,
+      correct: o.ok === undefined ? null : !!o.ok,
+      quiz: stationContent(st, S.group).opts.some((x) => x.ok),
+    };
+    if (st.id === GROUP_AFTER) S.group = chooseGroup(S.m);
+    if (o.switchTo) S.group = o.switchTo; // např. odmítnutý Erasmus → trasa „doma“
+    i++;
   }
-  return { ...S, total: S.piggy + S.bank + S.invest, elapsed, last };
+  S.route = routeFor(S.group);
+  S.pos = i; // index aktuálního stanoviště v trase (první bez volby)
+  return S;
 }
 
-// Hodí kostkou u podnikání. Volá se jen jednou při odpovědi, výsledek se uloží.
-export function rollRisk(st, choice) {
-  const o = st.opts[choice];
-  return o?.risk ? Math.random() < o.risk.p : null;
+// Je volba povolená? (index existuje a hráč splňuje podmínku)
+export function choiceAllowed(st, choice, S) {
+  const o = stationContent(st, S.group)?.opts?.[choice];
+  return !!o && !lockReason(o, S);
 }
 
-// Je volba povolená? (index existuje a možnost není zamčená)
-export function choiceAllowed(st, choice, unlockedInvest) {
-  const o = st.opts?.[choice];
-  if (!o) return false;
-  if (o.needs === "invest" && !unlockedInvest) return false;
-  return true;
+// ---- Skóre 0–100 -----------------------------------------------------------
+// Hranice metrik se spočítají z obsahu: nejhorší a nejlepší možný součet přes
+// všechna stanoviště (u variant se bere krajní hodnota z obou).
+const BOUNDS = (() => {
+  const b = { f: [0, 0], v: [0, 0], p: [0, 0], kc: [START_KC, START_KC] };
+  for (const st of STATIONS) {
+    if (st.final) continue;
+    const opts = st.variants ? Object.values(st.variants).flatMap((v) => v.opts) : st.opts;
+    for (const k of [...KEYS, "kc"]) {
+      const vals = opts.map((o) => (k === "kc" ? o.kc || 0 : o.fx?.[k] || 0));
+      b[k][0] += Math.min(...vals);
+      b[k][1] += Math.max(...vals);
+    }
+  }
+  return b;
+})();
+
+const norm = (k, x) => {
+  const [lo, hi] = BOUNDS[k];
+  return hi === lo ? 0.5 : Math.min(1, Math.max(0, (x - lo) / (hi - lo)));
+};
+
+export function scoreFor(S) {
+  const n = { f: norm("f", S.m.f), v: norm("v", S.m.v), p: norm("p", S.m.p), kc: norm("kc", S.kc) };
+  const avg = (n.f + n.v + n.p + n.kc) / 4;
+  const balance = Math.min(n.f, n.v, n.p);
+  const score = Math.round(100 * (SCORE.avgWeight * avg + SCORE.balanceWeight * balance));
+  return { score, norm: n };
 }
 
-export function tierFor(total) {
-  return TIERS.find((t) => t.min == null || total >= t.min);
+export function bandFor(score) {
+  return BANDS.find((b) => score >= b.min);
 }
 
-// Převažující typ hráče. Při shodě vrací oba (např. „Střadatel × Podnikavec").
-export function personaFor(types) {
-  const order = ["p", "s", "r"].sort((a, b) => types[b] - types[a]);
-  const mixed = types[order[0]] === types[order[1]];
+// Nejsilnější metrika (porovnává se podle normalizovaných hodnot, ať je to
+// férové i když má každá metrika jiný rozsah). Při shodě vrací obě.
+export function profileFor(n) {
+  const order = [...KEYS].sort((a, b) => n[b] - n[a]);
+  const mixed = Math.abs(n[order[0]] - n[order[1]]) < 1e-9;
   return { main: order[0], second: mixed ? order[1] : null };
+}
+
+export function profileName(pr) {
+  return METRICS[pr.main].profile + (pr.second ? " × " + METRICS[pr.second].profile : "");
 }

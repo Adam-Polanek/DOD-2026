@@ -1,139 +1,213 @@
 // ---------------------------------------------------------------------------
-//  ZDROJ PRAVDY o obsahu hry „Od kapesného k důchodu" (běží POUZE na serveru).
+//  ZDROJ PRAVDY o obsahu hry (běží POUZE na serveru).
 //
-//  Tady se mění texty, částky a odpovědi. Pravidla (jak se peníze počítají)
-//  jsou v game.js.
+//  Hráč prožije studium na VŠCHT v 10 stanovištích. Každá odpověď mění tři
+//  metriky a peníze:
+//    f  Finance     v  Vzdělání     p  Požitky     kc  změna úspor v Kč
+//
+//  Tady se mění texty, body a částky. Pravidla (výpočet, trasa, skóre) jsou
+//  v game.js.
 //
 //  Každá možnost odpovědi má:
-//    t     text odpovědi
-//    d     (nepovinné) menší popisek pod odpovědí
-//    g     typ hráče, kterému dá bod: "p" Požitkář, "s" Střadatel, "r" Podnikavec
-//    to    kam jdou peníze: { spent, piggy, bank, invest } jako podíl (1 = vše)
-//    risk  (podnikání) { p: šance na úspěch 0–1, win: kolik Kč získá při úspěchu }
-//    debt  (nepovinné) kolik Kč navíc to stojí (např. úroky ze splátek)
-//    needs (nepovinné) "invest" = možnost je zamčená, dokud hráč neprojde kurzem
-//    ok    jen u kvízu: true = správná odpověď
+//    t      text odpovědi (co hráč vybírá)
+//    fx     změna metrik, např. { f: -2, v: 1, p: 2 } (chybějící = 0)
+//    kc     změna úspor v Kč (záporné = výdaj)
+//    r      (nepovinné) co se stalo – ukáže se hráči po odpovědi
+//    needs  (nepovinné) podmínka, např. { kc: 10000 } nebo { v: 3 }. Když ji
+//           hráč nesplní, uvidí možnost zamčenou i s vysvětlením proč.
+//    ok     (nepovinné) u výpočtů: true = správná odpověď
+//    switchTo (nepovinné) po odpovědi přepne hráče do jiné skupiny/trasy
 //
-//  Pole g, to, risk, debt a ok se do prohlížeče NEPOSÍLAJÍ (viz publicStations
-//  v game.js), takže hráč z kódu stránky nevyčte, co se vyplatí.
+//  Pole fx, kc a ok se do prohlížeče NEPOSÍLAJÍ (viz publicStation v game.js),
+//  takže hráč z kódu stránky nevyčte, co se vyplatí.
+//
+//  Stanoviště může mít `variants: { erasmus: {...}, doma: {...} }` – jiný
+//  příběh a otázku podle skupiny, do které hráč padl (viz chooseGroup níže).
+//
+//  ⚠ Texty označené [NÁVRH] jsou jen zástupné, aby šla hra vyzkoušet celá.
+//    Nahradí je texty od Julie a Jany.
 // ---------------------------------------------------------------------------
 
+export const START_KC = 20000;
+
 export const STATIONS = [
-  { id: "s1", age: 8, title: "První kapesné", income: 50,
-    story: "Je ti 8 let. Babička ti k narozeninám dala první kapesné, padesátikorunu. Cestou domů jdete kolem cukrárny.",
-    q: "Co uděláš s padesátikorunou?",
+  { id: "s1", place: "Obytné budovy", title: "Nástup na vysokou",
+    story: "Přijali tě na VŠCHT! Od rodičů a z letní brigády máš naspořeno 20 000 Kč. První důležité rozhodnutí je tady: kde budeš bydlet?",
+    q: "Kde budeš bydlet?",
     opts: [
-      { g: "s", t: "Hodím ji do prasátka", d: "Doma v poličce", to: { piggy: 1 } },
-      { g: "p", t: "Koupím si zmrzlinu", d: "Hned a s radostí", to: { spent: 1 } },
-      { g: "r", t: "Koupím semínka, vypěstuju bylinky a prodám je sousedům", d: "Může vynést víc, ale taky nemusí vyrůst nic", risk: { p: 0.75, win: 150 } },
-    ],
-    tip: ["Prasátko vs. účet", "Peníze v prasátku se neztratí, ale kvůli inflaci si za ně za pár let koupíš méně."] },
+      { t: "Sdílené bydlení s kamarády – 8 000 Kč měsíčně za nájem a bude třeba složit kauci. Budeš mít vlastní pokoj a klid na učení.",
+        fx: { f: -2, v: 1, p: 2 }, kc: -12000,
+        r: "Máš soukromí, vlastní pokoj a prostor na učení, ale na kauci padne značná část úspor a budeš muset během semestru pracovat, abys zvládal/a platit nájem." },
+      { t: "Kolej – 5 000 Kč měsíčně za dvoulůžkový pokoj, sdílená kuchyňka a hluk, ale spousta nových známostí, díky kterým bude studium snazší.",
+        fx: { f: 1, p: 1 }, kc: -5000,
+        r: "Rychle si najdeš kamarády, můžete se učit spolu a sdílet materiály. Na pokoji je občas hluk, ale ušetříš peníze i stres." },
+      { t: "Bydlení u rodičů – 2 hodiny dojíždění denně, 800 Kč měsíčně za vlak, ale nezbývá ti čas na školní akce a kamarády.",
+        fx: { f: 3, v: -1, p: -2 }, kc: -800,
+        r: "Ušetříš větší částku za nájem, ale strávíš každý týden 10 hodin na cestě, pokud všechny spoje pojedou včas. V plném vlaku někdy budeš muset stát v uličce. Nezbyde moc energie a času na akce po škole. Kolik tě ten čas vlastně stojí?" },
+    ] },
 
-  { id: "s2", age: 12, title: "Příležitost: nošení dřeva", income: 100,
-    story: "Soused potřebuje přenosit dřevo do kůlny. Po dvou hodinách práce ti dá stovku.",
-    q: "Co s vydělanou stovkou?",
+  { id: "s2", place: "Bistro", title: "Stravování",
+    story: "[NÁVRH] Je poledne a máš hlad. Menza je levná, ale fronta je až ke dveřím. Kamarádi jdou do bistra naproti.",
+    q: "Jak to budeš s jídlem řešit přes semestr?",
     opts: [
-      { g: "p", t: "Koupím si novou hru do mobilu", to: { spent: 1 } },
-      { g: "r", t: "Koupím z bazaru rozbité kolo, opravím ho a prodám", d: "Když se to povede, vyděláš", risk: { p: 0.75, win: 400 } },
-      { g: "s", t: "Uložím ji na dětský spořicí účet", to: { bank: 1 } },
-    ],
-    tip: ["První vlastní výdělek", "Peníze, které si vyděláš prací, jsou aktivní příjem. Zkus si z každého příjmu nejdřív kousek odložit a teprve pak utrácet."] },
+      { t: "[NÁVRH] Menza – levně a rychle, sedím u stolu se spolužáky", fx: { f: 1, v: 1 }, kc: -3000 },
+      { t: "[NÁVRH] Bistro a rozvoz jídla – chutná to a nemusím nic řešit", fx: { f: -2, p: 3 }, kc: -9000 },
+      { t: "[NÁVRH] Vařím si dopředu na celý týden", fx: { f: 2, v: -1 }, kc: -1500 },
+    ] },
 
-  { id: "s3", age: 16, title: "První brigáda ve fastfoodu", income: 4800,
-    story: "O prázdninách jsi na brigádě ve fastfoodu. Za 40 odpracovaných hodin po 120 Kč máš 4 800 Kč.",
-    q: "Jak naložíš s první výplatou?",
+  { id: "s3", place: "Městská knihovna", title: "Zkouškové je tady!",
+    story: "[NÁVRH] Blíží se zkouškové a čekají tě tři těžké zkoušky. Kamarádi zároveň plánují výlet na hory.",
+    q: "Jak strávíš zkouškové?",
     opts: [
-      { g: "r", t: "Koupím použitý foťák a budu fotit na zakázku", d: "Plesy, oslavy, sociální sítě", risk: { p: 0.7, win: 12000 } },
-      { g: "s", t: "Celou výplatu na spořicí účet", to: { bank: 1 } },
-      { g: "p", t: "Nové boty a oblečení", to: { spent: 1 } },
-    ],
-    tip: ["Pravidlo 50/30/20", "Oblíbené pravidlo říká: 50 % příjmu na nutné výdaje, 30 % na to, co tě baví, a 20 % na spoření."] },
+      { t: "[NÁVRH] Zavřu se v knihovně a na pár týdnů přeruším brigádu", fx: { v: 3, f: -1, p: -2 }, kc: -2000 },
+      { t: "[NÁVRH] Zaplatím si doučování u staršího studenta", fx: { v: 2, f: -1 }, kc: -3000 },
+      { t: "[NÁVRH] Jedu na hory, učit se budu na poslední chvíli", fx: { p: 3, v: -2 }, kc: -2500 },
+    ] },
 
-  { id: "s4", age: 20, title: "Práce při studiu", income: 24000,
-    story: "Studuješ na VŠCHT a vedle školy pracuješ v laboratoři za 200 Kč/h. Za semestr ti zbylo 24 000 Kč.",
-    q: "Kamarádi mají nový telefon. Co uděláš?",
+  { id: "s4", place: "Prodejna elektroniky", title: "Rozbitý notebook",
+    story: "[NÁVRH] Uprostřed semestru ti spadl notebook a nejde zapnout. Bez něj se neobejdeš.",
+    q: "Co uděláš?",
     opts: [
-      { g: "p", t: "Koupím telefon za 24 000 Kč na splátky", d: "Na úrocích přeplatíš 6 000 Kč", to: { spent: 1 }, debt: 6000 },
-      { g: "s", t: "Založím si nouzovou rezervu na účtu", d: "Pro případ nečekaných výdajů", to: { bank: 1 } },
-      { g: "r", t: "Rozjedu s kamarádem e-shop s vlastními tričky", d: "Podnikání: velká šance, velké riziko", risk: { p: 0.6, win: 60000 } },
-    ],
-    tip: ["Splátky jsou drahé", "Nákup na splátky znamená, že za stejnou věc zaplatíš víc. Nouzová rezerva ve výši 3–6 měsíčních výdajů tě podrží, když se něco pokazí."] },
+      { t: "[NÁVRH] Koupím nový výkonný notebook za hotové (25 000 Kč)", fx: { v: 1, p: 2, f: -2 }, kc: -25000,
+        needs: { kc: 25000 } },
+      { t: "[NÁVRH] Nechám ho opravit v servisu", fx: { v: 1, f: 1 }, kc: -4000 },
+      { t: "[NÁVRH] Koupím nový na splátky – na úrocích přeplatím 5 000 Kč", fx: { p: 2, v: 1, f: -3 }, kc: -5000 },
+    ] },
 
-  // task: true = na stanovišti je úkol s obsluhou. Po splnění organizátor
-  // ukáže druhý QR kód („úkolový"), teprve pak jde odpovídat.
-  { id: "s5", age: 22, title: "Příležitostný přivýdělek", income: 500, task: true,
-    story: "Na stanovišti tě čeká úkol od studentů. Když ho splníš, organizátor ti ukáže speciální QR kód a dostaneš odměnu 500 Kč.",
-    taskText: "[DOPLNIT: zadání úkolu, který připraví tým stanoviště]",
-    q: "Úkol splněn. Kam dáš odměnu?",
+  { id: "s5", place: "Vnitroblok", title: "Odborná praxe",
+    story: "[NÁVRH] Blíží se léto a máš na výběr, co s ním. Na katedře shánějí studenty na praxi v laboratoři.",
+    q: "Co budeš dělat přes léto?",
     opts: [
-      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
-      { g: "r", t: "Půjčím ji kamarádovi na start-up za malý podíl ve firmě", d: "Většina start-upů neuspěje", risk: { p: 0.5, win: 2500 } },
-      { g: "p", t: "Utratím ji za večer ve městě", to: { spent: 1 } },
-    ],
-    tip: ["Bonusy a přivýdělky", "Nečekané peníze se utrácejí nejsnáz. Když je rovnou uložíš, ani ti nebudou chybět."] },
+      { t: "[NÁVRH] Neplacená praxe v laboratoři v mém oboru", fx: { v: 3, f: -1, p: -1 }, kc: 0 },
+      { t: "[NÁVRH] Placená brigáda ve skladu, s oborem nesouvisí", fx: { f: 3, v: -1 }, kc: 15000 },
+      { t: "[NÁVRH] Volno a cestování s kamarády", fx: { p: 3, f: -1 }, kc: -6000 },
+    ] },
 
-  // quiz: true = otázka má správnou odpověď (ok: true). Nedává bod žádnému typu.
-  { id: "s6", age: 24, title: "Kurz o investování", income: 0, quiz: true, bonus: 2000,
-    story: "Škola pořádá dobrovolný kurz o investování. Kdo správně odpoví na kontrolní otázku, získá bonus 2 000 Kč. Po kurzu můžeš peníze nově ukládat i do akcií a ETF.",
-    q: "Co je ETF?",
-    opts: [
-      { t: "Spořicí účet s pevným úrokem garantovaným státem" },
-      { t: "Fond, který kupuje najednou akcie mnoha firem", ok: true },
-      { t: "Druh kryptoměny" },
-    ],
-    tip: ["Diverzifikace", "ETF rozloží tvoje peníze mezi stovky firem, takže neztratíš všechno, když se jedné nedaří. Dlouhodobě akciové ETF rostly rychleji než spořicí účty, ale jejich hodnota kolísá."] },
+  // O tom, kdo jede na Erasmus, rozhodují body ze stanovišť 1–5 (chooseGroup).
+  { id: "s6", place: "Přístav", title: "Erasmus",
+    variants: {
+      erasmus: {
+        story: "Výběrová komise tě vybrala na semestr do zahraničí s grantem programu Erasmus+!",
+        q: "Kam pojedeš?",
+        opts: [
+          { t: "Vyberu dražší zemi – 70 % nákladů mi pokryje grant, zbytek doplatím z úspor",
+            fx: { f: -2, v: 2, p: 3 }, kc: -10000, needs: { kc: 10000 },
+            r: "Semestr na zahraniční univerzitě ti přinese nové kontakty, zkušenosti a zdokonalíš se v jazyce. V životopise bude taková zkušenost vynikat. Ubyde ale z úspor a po návratu budeš muset šetřit." },
+          { t: "Vyberu levnější zemi, kde nebudu muset doplácet nic z úspor. Na partnerské škole ale nejspíš nebude moc předmětů z mého oboru.",
+            fx: { v: 1, p: 2 }, kc: 0,
+            r: "Máš v životopise zahraniční zkušenost a nebudeš se muset uskromňovat po návratu. Všechny předměty ti ale na škole neuznají a budeš muset po návratu dohnat několik zkoušek." },
+          // Kdo odmítne, přejde na trasu „doma“ (Kanceláře → Banka) – rozhodnuto 26. 10.
+          { t: "Nepojedu, semestr strávím doma, všechny předměty dokončím včas a budu stíhat práci na částečný úvazek",
+            fx: { f: 3, p: -2 }, kc: 12000, switchTo: "doma",
+            r: "Nebudeš muset řešit prodlužování studia a dosáhneš na slušné úspory. Spolužáci budou ale mít lepší angličtinu, zážitky a kontakty na celý život. Možná už se podobná příležitost neobjeví." },
+        ] },
+      doma: {
+        story: "[NÁVRH – píšou Julie a Jana] Na Erasmus tě tentokrát nevybrali. Spolužáci odjíždějí a ty máš před sebou semestr v Praze.",
+        q: "Co se semestrem uděláš?",
+        opts: [
+          { t: "[NÁVRH] Vezmu práci na částečný úvazek", fx: { f: 3, p: -1 }, kc: 20000 },
+          { t: "[NÁVRH] Přihlásím se na intenzivní jazykový kurz", fx: { v: 2, f: -1 }, kc: -6000 },
+          { t: "[NÁVRH] Užiju si Prahu – koncerty, výlety, kamarádi", fx: { p: 3, f: -1 }, kc: -5000 },
+        ] },
+    } },
 
-  { id: "s7", age: 25, title: "Práce na plný úvazek", income: 900000,
-    story: "Nastupuješ jako chemik do firmy. Každý měsíc ti po zaplacení nájmu a jídla zbyde 5 000 Kč. Za 15 let to dělá 900 000 Kč.",
-    q: "Co budeš s volnými penězi dělat?",
-    opts: [
-      { g: "p", t: "Užívat si: dražší auto, dovolené", to: { spent: 1 } },
-      { g: "r", t: "Pravidelně investovat do ETF", to: { invest: 1 }, needs: "invest" },
-      { g: "s", t: "Posílat je na spořicí účet", to: { bank: 1 } },
-    ],
-    tip: ["Složené úročení", "Výnos, který investice vydělá, se dál zhodnocuje. Čím dřív začneš, tím víc za tebe pracuje čas."] },
+  // Banka a Kanceláře: skupina „erasmus“ jde nejdřív do Banky, „doma“ nejdřív do Kanceláří.
+  { id: "s7", place: "Banka", title: "Spořicí účet",
+    variants: {
+      erasmus: {
+        story: "[NÁVRH] Po návratu z Erasmu chceš zbylé peníze z grantu uložit. Banka nabízí spořicí účet s úrokem 4 % ročně.",
+        q: "Uložíš 10 000 Kč na rok. Kolik budeš mít na konci roku?",
+        opts: [
+          { t: "10 040 Kč", fx: {}, kc: 0 },
+          { t: "10 400 Kč", fx: { f: 2 }, kc: 400, ok: true },
+          { t: "14 000 Kč", fx: {}, kc: 0 },
+        ] },
+      doma: {
+        story: "[NÁVRH] Díky práci při studiu ti každý měsíc něco zbývá. Banka nabízí spořicí účet s úrokem 4 % ročně.",
+        q: "Uložíš 20 000 Kč na rok. Kolik budeš mít na konci roku?",
+        opts: [
+          { t: "20 080 Kč", fx: {}, kc: 0 },
+          { t: "24 000 Kč", fx: {}, kc: 0 },
+          { t: "20 800 Kč", fx: { f: 2 }, kc: 800, ok: true },
+        ] },
+    } },
 
-  { id: "s8", age: 40, title: "Ředitel firmy", income: 2000000,
-    story: "Povýšili tě na ředitele s platem 150 000 Kč měsíčně. Za dalších 15 let ti zbyde 2 miliony korun.",
-    q: "Jak naložíš s vyšším příjmem?",
-    opts: [
-      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
-      { g: "p", t: "Luxusní vila a sportovní auto", to: { spent: 1 } },
-      { g: "r", t: "Investovat a žít skromněji", to: { invest: 1 }, needs: "invest" },
-    ],
-    tip: ["Inflace životního stylu", "Když s vyšším platem rostou i výdaje, nezbývá ti víc než dřív. Bohatství neurčuje plat, ale to, kolik z něj ti zůstane."] },
+  { id: "s8", place: "Kancelářské budovy", title: "Státnice a první nabídka",
+    variants: {
+      erasmus: {
+        story: "[NÁVRH] Máš po státnicích! Díky zkušenosti ze zahraničí máš na stole víc nabídek, než jsi čekal/a.",
+        q: "Kterou nabídku vezmeš?",
+        opts: [
+          { t: "[NÁVRH] Mezinárodní firma, vysoký plat, hodně přesčasů", fx: { f: 3, p: -1 }, kc: 10000,
+            needs: { v: 4 } },
+          { t: "[NÁVRH] Doktorát na VŠCHT", fx: { v: 3, f: -1 }, kc: 0 },
+          { t: "[NÁVRH] Půl roku cestuju, práci řeším potom", fx: { p: 3, f: -2 }, kc: -8000 },
+        ] },
+      doma: {
+        story: "[NÁVRH] Máš po státnicích! Firma, kde jsi pracoval/a při studiu, ti nabízí stálé místo.",
+        q: "Co uděláš?",
+        opts: [
+          { t: "[NÁVRH] Zůstanu ve firmě, kterou znám", fx: { f: 2, v: 1 }, kc: 8000 },
+          { t: "[NÁVRH] Doktorát na VŠCHT", fx: { v: 3, f: -1 }, kc: 0 },
+          { t: "[NÁVRH] Půl roku cestuju, práci řeším potom", fx: { p: 3, f: -2 }, kc: -8000 },
+        ] },
+    } },
 
-  { id: "s9", age: 55, title: "Poloviční úvazek", income: 300000,
-    story: "Zpomaluješ a pracuješ na poloviční úvazek. Do důchodu ti zbyde ještě 300 000 Kč.",
-    q: "Co s posledními úsporami před důchodem?",
+  { id: "s9", place: "Park", title: "Rozpočet na semestr",
+    story: "[NÁVRH] Sedíš v parku a přemýšlíš, jak rozdělit první výplatu.",
+    q: "Jak ji rozdělíš?",
     opts: [
-      { g: "r", t: "Investovat", to: { invest: 1 }, needs: "invest" },
-      { g: "p", t: "Procestovat svět", to: { spent: 1 } },
-      { g: "s", t: "Na spořicí účet", to: { bank: 1 } },
-    ],
-    tip: ["Blíž k důchodu, míň rizika", "Před důchodem se vyplatí přesouvat část investic do bezpečnějších produktů, aby tě pokles trhu nezaskočil těsně před tím, než peníze budeš potřebovat."] },
+      { t: "[NÁVRH] Podle pravidla 50/30/20 – nutné výdaje, zábava, spoření", fx: { f: 1, v: 1, p: 1 }, kc: 5000 },
+      { t: "[NÁVRH] Užiju si ji – zasloužím si to", fx: { p: 3, f: -2 }, kc: -5000 },
+      { t: "[NÁVRH] Všechno, co zbude, odložím na spořicí účet", fx: { f: 3, p: -2 }, kc: 10000 },
+    ] },
 
   // final: true = poslední stanoviště, žádná otázka, jen vyhodnocení.
-  { id: "s10", age: 65, title: "Důchod", final: true },
+  { id: "s10", place: "DOX", title: "Promoce a první výplata", final: true },
 ];
 
-// Roční zhodnocení v herním zjednodušení (v dnešních penězích).
-export const RATE = { piggy: -0.02, bank: 0.01, invest: 0.06 };
+// ---- Trasa -------------------------------------------------------------------
+// Body ze stanovišť 1–5 rozhodnou, kdo jede na Erasmus. VARIANTA 1 (vybraná
+// 26. 10.): Vzdělání > Finance (při rovnosti jede) a zároveň aspoň MIN_V bodů
+// vzdělání. Pro variantu 4 („nejsilnější metrika“) stačí přepsat jen tuhle funkci.
+export const GROUP_AFTER = "s5";
+const MIN_V = 2;
+export function chooseGroup(m) {
+  return m.v >= m.f && m.v >= MIN_V ? "erasmus" : "doma";
+}
 
-// Tři typy hráče (dolní lišta). Texty se ukážou na konci hry.
-export const GROUPS = {
-  p: { name: "Požitkář", color: "#f2a33a", motto: "Žiju teď",
-       text: "Peníze jsou pro tebe hlavně prostředek, jak si užít život. Umíš si udělat radost a nebojíš se utratit. Pozor jen, aby ti na stáří něco zbylo: i malá pravidelná částka stranou dělá za 40 let velký rozdíl." },
-  s: { name: "Střadatel", color: "#4a8af0", motto: "Jistota především",
-       text: "Jsi opatrný a rozvážný. Máš rezervu a dluhy ti nahánějí strach. Tvoje peníze jsou v bezpečí, jen rostou pomalu. Zkus část úspor dlouhodobě investovat, ať ti inflace neujídá." },
-  r: { name: "Podnikavec", color: "#e64010", motto: "Riskuju, aby to rostlo",
-       text: "Vidíš příležitosti tam, kde ostatní ne, a nebojíš se riskovat. Díky tomu ti peníze můžou růst nejrychleji. Nezapomínej ale na rezervu pro horší časy, ne každá sázka vyjde." },
+// Pořadí stanovišť pro každou skupinu (id stanovišť).
+export const ROUTES = {
+  erasmus: ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9", "s10"],
+  doma:    ["s1", "s2", "s3", "s4", "s5", "s6", "s8", "s7", "s9", "s10"],
 };
 
-// Úrovně důchodu a ceny (od nejlepší). Ceny podle toho, jak hráč skončí.
-export const TIERS = [
-  { id: "renta",  min: 8000000, t: "Vlastní dům a renta z dividend", d: "Žiješ z výnosů svých investic a peníze ti ještě rostou.", prize: "Hlavní cena", prizeText: "[DOPLNIT cenu]" },
-  { id: "byt",    min: 2500000, t: "Vlastní byt a klidný důchod", d: "Máš rezervu, občas si dopřeješ výlet.", prize: "Střední cena", prizeText: "[DOPLNIT cenu]" },
-  { id: "najem",  min: 500000,  t: "Skromný důchod v nájmu", d: "Vyjdeš, ale na nečekané výdaje nezbývá moc.", prize: "Malá cena", prizeText: "[DOPLNIT cenu]" },
-  { id: "davky",  min: null,    t: "Domov důchodců na dávkách", d: "Jsi odkázaný na státní důchod a dávky.", prize: "Účastnická drobnost", prizeText: "[DOPLNIT cenu]" },
+// Proč hráč padl do skupiny – ukáže se na stanovišti 6.
+export const GROUP_INFO = {
+  erasmus: { name: "Jedeš na Erasmus",
+             why: "Výběrová komise hodnotí hlavně studijní výsledky. Do studia jsi zatím investoval/a víc než do peněz, a to se vyplatilo." },
+  doma:    { name: "Zůstáváš doma",
+             why: "Na výběrko to tentokrát nestačilo, komise hledí hlavně na studijní výsledky. Semestr strávíš v Praze." },
+};
+
+// ---- Vyhodnocení -------------------------------------------------------------
+// Tři metriky = tři profily hráče. Nejsilnější metrika určí profil.
+export const METRICS = {
+  f: { name: "Finance",  profile: "Střadatel",    color: "#4a8af0",
+       text: "Umíš hospodařit a máš rezervu. Peníze pro tebe znamenají jistotu. Nezapomeň ale, že investice do sebe a do zážitků se taky vrací." },
+  v: { name: "Vzdělání", profile: "Studijní typ", color: "#e64010",
+       text: "Investuješ do sebe a do kontaktů. To se ti dlouhodobě vrátí v lepší práci. Hlídej si ale, aby ti mezitím nedošly peníze." },
+  p: { name: "Požitky",  profile: "Požitkář",     color: "#f2a33a",
+       text: "Umíš si užít studentský život a máš spoustu zážitků. Pozor jen, ať ti po studiu něco zbude." },
+};
+
+// Životní skóre 0–100: 80 % průměr (finance, vzdělání, požitky, Kč)
+// + 20 % nejslabší oblast = bonus za vyvážený život.
+export const SCORE = { avgWeight: 0.8, balanceWeight: 0.2 };
+
+// Slovní hodnocení podle skóre (od nejlepšího).
+export const BANDS = [
+  { min: 70, t: "Výborně vyvážený start", d: "Zvládl/a jsi studium, peníze i život kolem. Do pracovního života vstupuješ s náskokem." },
+  { min: 45, t: "Solidní start",          d: "Někde jsi vyhrál/a, jinde ztratil/a. Na tom se dá stavět." },
+  { min: 0,  t: "Start s dluhem",         d: "Něco jsi hodně zanedbal/a. Dobrá zpráva: ve skutečném životě máš čas to dohnat." },
 ];
