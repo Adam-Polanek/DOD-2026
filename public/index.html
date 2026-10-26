@@ -224,6 +224,17 @@ function show(msg, info) {
 function vIntro(msg) {
   ST = null;
   const m = CFG.metrics;
+  // Hráč naskenoval QR, ale tenhle prohlížeč ho nezná (např. fotoaparát otevřel
+  // odkaz v jiném prohlížeči). Nejdřív nabídneme obnovení, ať nezačne od nuly.
+  const restoreBox = `
+    <details class="card" style="gap:10px" ${pendingQr ? "open" : ""}>
+      <summary style="cursor:pointer;font-weight:700">Už hraješ? Obnov hru kódem</summary>
+      <div class="manual">
+        <label for="restore" style="position:absolute;left:-9999px">Hrací kód</label>
+        <input type="text" id="restore" placeholder="DOD-XXXX" autocomplete="off">
+        <button class="btn ghost" onclick="restore()">Obnovit</button>
+      </div>
+    </details>`;
   render(`
     <div class="ellipse-hero">
       ${ellipseSVG("#e64010")}
@@ -231,6 +242,7 @@ function vIntro(msg) {
       <h1 style="margin-top:10px">Tvoje studium<br>na VŠCHT</h1>
     </div>
     ${alertBox(msg)}
+    ${pendingQr ? restoreBox : ""}
     <p class="story">Zkus si nanečisto celé studium: bydlení, zkouškové, Erasmus i první výplatu. Projdeš ${CFG.routeLength} stanovišť, na každém tě čeká kus příběhu a jedno rozhodnutí. Na konci uvidíš, jak jsi dopadl/a a jak sis vedl/a proti ostatním.</p>
     <div class="rules">
       <div class="rule"><span class="ico">QR</span><div><b>Stanoviště jdou popořadě</b><span class="muted">Každé odemkneš naskenováním QR kódu na místě.</span></div></div>
@@ -242,15 +254,8 @@ function vIntro(msg) {
       <label for="nick">Přezdívka do žebříčku (nepovinné, nepiš celé jméno)</label>
       <input type="text" id="nick" maxlength="40" autocomplete="off" placeholder="např. Chemik007">
     </div>
-    <button class="btn" id="startBtn" onclick="start()">Začít hru</button>
-    <details class="card" style="gap:10px">
-      <summary style="cursor:pointer;font-weight:700">Už hraješ? Obnov hru kódem</summary>
-      <div class="manual">
-        <label for="restore" style="position:absolute;left:-9999px">Hrací kód</label>
-        <input type="text" id="restore" placeholder="DOD-XXXX" autocomplete="off">
-        <button class="btn ghost" onclick="restore()">Obnovit</button>
-      </div>
-    </details>
+    <button class="btn" id="startBtn" onclick="start()">${pendingQr ? "Ne, začínám novou hru" : "Začít hru"}</button>
+    ${pendingQr ? "" : restoreBox}
   `);
 }
 
@@ -270,6 +275,7 @@ async function restore() {
   try {
     ST = await api("/api/me/" + encodeURIComponent(code));
     storeSet(ST.code);
+    if (pendingQr) { const t = pendingQr; pendingQr = null; return unlock(t); }
     show("Hra obnovena. Pokračuj tam, kde jsi skončil/a.", true);
   } catch (e) { vIntro(e.status === 404 ? "Tenhle kód neznáme. Zkontroluj ho." : e.message); }
 }
@@ -551,7 +557,7 @@ function newGame() {
   if (code) {
     try { ST = await api("/api/me/" + encodeURIComponent(code)); } catch { storeSet(null); ST = null; }
   }
-  if (!ST) return vIntro(pendingQr ? "Nejdřív začni hru, stanoviště se pak odemkne samo." : "");
+  if (!ST) return vIntro(pendingQr ? "Naskenoval/a jsi QR kód. Pokud už hraješ, zadej svůj kód DOD-XXXX a stanoviště se odemkne." : "");
   if (pendingQr) { const t = pendingQr; pendingQr = null; return unlock(t); }
   show();
 })();
