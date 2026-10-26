@@ -3,516 +3,558 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Trasa DOD</title>
+<meta name="theme-color" content="#e64010">
+<title>Studium na VŠCHT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..48,500..800&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
+  /* Varianta C „Deník" podle online manuálu VŠCHT (červená #e64010, černá, lososové doplňky). */
   :root{
-    --paper:#eef2f0; --card:#fff; --card2:#f6f9f7;
-    --ink:#15211d; --muted:#57675f; --line:#d7e0db;
-    --brand:#0d5c4a; --brand-ink:#0a4436;
-    --flag:#e2503a; --gold:#bd7d0d; --good:#2f9e44; --bad:#d1402c;
-    --t-historie:#0d5c4a; --t-chemie:#5648c8; --t-ekologie:#2f9e44; --t-finance:#c07a10; --t-volno:#e2503a;
-    --shadow:0 1px 2px rgba(18,40,32,.06), 0 8px 24px rgba(18,40,32,.07);
-    --r:16px;
-    color-scheme:light dark;
-    font-family:"Instrument Sans", system-ui, sans-serif;
+    --red:#e64010; --black:#111; --white:#fff;
+    --peach:#fff4ef; --salmon:#ef8364; --grey:#d9d9d9;
+    --ink:#161412; --muted:#5d4c46; --bg:#f9d3c8; --card:#fff;
+    --good:#1f8a4c; --bad:#c0271b;
+    --c-f:#4a8af0; --c-v:#e64010; --c-p:#f2a33a;
+    --f:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme:light;
   }
-  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-    --paper:#0e1512; --card:#16211d; --card2:#1b2823; --ink:#eef3f0; --muted:#9db0a8; --line:#293a34;
-    --brand:#39bfa0; --brand-ink:#8fe6cf; --flag:#ff6f57; --gold:#f0b53f; --good:#4fca6b; --bad:#ff6f57;
-    --t-historie:#39bfa0; --t-chemie:#8f83ef; --t-ekologie:#5fce7a; --t-finance:#e6a63a; --t-volno:#ff8067;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
-  }}
-  :root[data-theme="dark"]{
-    --paper:#0e1512; --card:#16211d; --card2:#1b2823; --ink:#eef3f0; --muted:#9db0a8; --line:#293a34;
-    --brand:#39bfa0; --brand-ink:#8fe6cf; --flag:#ff6f57; --gold:#f0b53f; --good:#4fca6b; --bad:#ff6f57;
-    --t-historie:#39bfa0; --t-chemie:#8f83ef; --t-ekologie:#5fce7a; --t-finance:#e6a63a; --t-volno:#ff8067;
-    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.4);
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-size:14px;-webkit-font-smoothing:antialiased;
-       padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0);}
-  img{max-width:100%;}
-  h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;margin:0;text-wrap:balance;letter-spacing:-.01em;}
-  button{font-family:inherit;}
-  .mono{font-family:"Space Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;}
-  [hidden]{display:none!important;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg)}
+  body{color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.45;min-height:100svh;display:flex;flex-direction:column}
+  .shell{width:100%;max-width:520px;margin:0 auto;flex:1;display:flex;flex-direction:column}
 
-  #app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;}
+  header{position:sticky;top:0;z-index:5;background:var(--red);color:var(--white);padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));display:flex;align-items:center;gap:12px}
+  .logo{font-weight:900;font-stretch:112%;letter-spacing:.02em;font-size:15px;background:#111;color:#fff;padding:4px 8px;border-radius:3px}
+  .logo small{font-weight:600;opacity:.85;margin-left:4px;font-size:11px;letter-spacing:.08em}
+  .hdr-info{font-size:12px;opacity:.9;line-height:1.2}
+  .hdr-wallet{margin-left:auto;text-align:right;line-height:1.1}
+  .hdr-wallet .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;opacity:.75}
+  .hdr-wallet .val{font-family:var(--mono);font-weight:600;font-size:17px}
 
-  .top{position:sticky;top:env(safe-area-inset-top,0);z-index:20;background:color-mix(in srgb,var(--paper) 86%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
-  .top-in{display:flex;align-items:center;gap:12px;padding:10px 16px;}
-  .mark{width:34px;height:34px;border-radius:9px;background:var(--brand);display:grid;place-items:center;flex:0 0 auto;position:relative;}
-  .mark::after{content:"";position:absolute;width:11px;height:11px;background:var(--flag);border-radius:2px;transform:rotate(45deg);}
-  .top-title{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;line-height:1;}
-  .top-sub{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:.02em;text-transform:uppercase;}
-  .code-pill{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;}
-  .code-pill b{font-family:"Space Mono",monospace;font-size:13px;letter-spacing:.02em;}
-  .code-pill span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-  .pts{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;box-shadow:var(--shadow);}
-  .pts b{font-family:"Space Mono",monospace;font-size:14px;}
-  .pts span{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
-  .theme-btn{background:none;border:1px solid var(--line);color:var(--muted);width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:14px;display:grid;place-items:center;}
-  .bar{height:4px;background:var(--line);}
-  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--flag));width:0;transition:width .4s cubic-bezier(.2,.7,.3,1);}
+  main{flex:1;padding:20px 16px 28px;display:flex;flex-direction:column;gap:18px}
+  h1{font-size:34px;line-height:1.02;font-weight:900;font-stretch:118%;text-wrap:balance;margin:0}
+  h2{font-size:24px;line-height:1.1;font-weight:850;font-stretch:112%;text-wrap:balance;margin:0}
+  p{margin:0}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#111}
+  .muted{color:var(--muted)}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .stack{display:flex;flex-direction:column;gap:18px}
 
-  .view{padding:20px 16px 40px;flex:1;animation:in .25s ease;}
-  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-  @media (prefers-reduced-motion:reduce){.view{animation:none}.bar>i{transition:none}}
+  .btn{appearance:none;font:inherit;font-weight:800;font-stretch:108%;font-size:17px;padding:16px 18px;border-radius:999px;background:#111;color:#fff;border:2px solid #111;box-shadow:4px 4px 0 var(--red);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:10px}
+  .btn:hover{background:var(--red)}
+  .btn:disabled{opacity:.6;cursor:wait}
+  .btn.ghost{background:#fff;color:#111;box-shadow:4px 4px 0 #111}
+  .btn.ghost:hover{background:#111;color:#fff}
+  .btn:focus-visible,.opt:focus-visible,.linkbtn:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+  .linkbtn{background:none;border:0;font:inherit;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:14px;padding:4px;align-self:center}
 
-  .hero{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;box-shadow:var(--shadow);}
-  .hero .ey{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--flag);}
-  .hero h1{font-size:29px;line-height:1.03;margin:12px 0 10px;font-weight:800;}
-  .hero p{color:var(--muted);font-size:15px;line-height:1.5;margin:0;}
-  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px;}
-  .chip{font-size:12px;padding:6px 11px;border-radius:999px;background:var(--card2);border:1px solid var(--line);color:var(--ink);display:inline-flex;gap:6px;align-items:center;}
-  .how{margin-top:22px;display:grid;gap:10px;}
-  .how-row{display:flex;gap:13px;align-items:flex-start;}
-  .num{flex:0 0 auto;width:27px;height:27px;border-radius:8px;background:color-mix(in srgb,var(--brand) 14%,transparent);color:var(--brand-ink);font-family:"Space Mono",monospace;font-weight:700;font-size:13px;display:grid;place-items:center;}
-  :root[data-theme="dark"] .num,:root:not([data-theme="light"]) .num{color:var(--brand);}
-  .how-row p{margin:0;font-size:14px;line-height:1.45;}
+  .ellipse-hero{position:relative;padding:28px 4px 8px}
+  .ellipse-hero svg{position:absolute;inset:-10px -30px auto auto;width:260px;height:180px;pointer-events:none}
 
-  .cta{width:100%;border:none;border-radius:14px;background:var(--brand);color:#fff;font-weight:700;font-size:16px;padding:16px;cursor:pointer;box-shadow:var(--shadow);transition:transform .08s;}
-  :root[data-theme="dark"] .cta,:root:not([data-theme="light"]) .cta{color:#06120e;}
-  .cta:active{transform:scale(.985);}
-  .cta[disabled]{opacity:.6;cursor:default;}
-  .cta.ghost{background:var(--card);color:var(--ink);border:1px solid var(--line);}
-  .cta.flag{background:var(--flag);color:#fff;}
-  .stick{position:sticky;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,transparent,var(--paper) 34%);}
+  .card,.st,.opt,.tip,.cat{border:2px solid #111;box-shadow:4px 4px 0 #111;border-radius:14px}
+  .card{background:var(--card);padding:18px;display:flex;flex-direction:column;gap:12px}
+  .rules{display:grid;gap:10px}
+  .rule{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;font-size:15px}
+  .rule b{display:block}
+  .ico{width:34px;height:34px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;font-size:13px}
 
-  /* code reveal */
-  .codebox{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px 22px;box-shadow:var(--shadow);text-align:center;}
-  .codebox .lab{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
-  .codebox .big{font-family:"Space Mono",monospace;font-weight:700;font-size:44px;letter-spacing:.04em;color:var(--brand-ink);margin:10px 0 6px;}
-  :root[data-theme="dark"] .codebox .big,:root:not([data-theme="light"]) .codebox .big{color:var(--brand);}
-  .codebox p{color:var(--muted);font-size:14px;line-height:1.5;margin:6px auto 0;max-width:34ch;}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13px;font-weight:700}
+  input[type=text]{font:inherit;padding:12px 14px;border-radius:12px;border:2px solid #111;background:#fff;width:100%;min-width:0}
+  .manual{display:flex;gap:8px}
+  .manual input{font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em}
+  .manual .btn{width:auto;padding:12px 18px;flex:none}
 
-  .rhead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px;}
-  .rhead h2{font-size:20px;font-weight:700;}
-  .rhead .cnt{font-family:"Space Mono",monospace;font-size:13px;color:var(--muted);}
-  .sub{color:var(--muted);font-size:13px;margin:0 0 16px;line-height:1.4;}
-  .stations{display:grid;gap:11px;}
-  .st{display:flex;gap:14px;align-items:center;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;cursor:pointer;box-shadow:var(--shadow);transition:transform .08s;}
-  .st:active{transform:scale(.99);}
-  .st .badge{flex:0 0 auto;width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;font-size:17px;background:var(--card2);border:1px solid var(--line);}
-  .st .badge.done{background:var(--good);color:#fff;border-color:transparent;}
-  .st .body{min-width:0;flex:1;}
-  .st .nm{font-family:"Bricolage Grotesque",sans-serif;font-weight:700;font-size:15px;line-height:1.15;}
-  .st .lo{font-size:12.5px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .st .rt{flex:0 0 auto;text-align:right;}
-  .tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:3px 8px;border-radius:6px;}
-  .st .earn{font-family:"Space Mono",monospace;font-size:12px;color:var(--good);margin-top:6px;font-weight:700;}
-  .st .arw{color:var(--muted);font-size:12px;margin-top:6px;}
-  .tag-historie{background:color-mix(in srgb,var(--t-historie) 15%,transparent);color:var(--t-historie);}
-  .tag-chemie{background:color-mix(in srgb,var(--t-chemie) 15%,transparent);color:var(--t-chemie);}
-  .tag-ekologie{background:color-mix(in srgb,var(--t-ekologie) 15%,transparent);color:var(--t-ekologie);}
-  .tag-finance{background:color-mix(in srgb,var(--t-finance) 15%,transparent);color:var(--t-finance);}
-  .tag-volno{background:color-mix(in srgb,var(--t-volno) 15%,transparent);color:var(--t-volno);}
+  .alert{border:2px solid var(--bad);background:#fff;color:var(--bad);border-radius:12px;padding:12px 14px;font-weight:700;font-size:15px}
+  .alert.info{border-color:#111;color:#111;background:var(--peach)}
 
-  .back{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0;display:inline-flex;gap:6px;align-items:center;margin-bottom:16px;}
-  .st-hd{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px;}
-  .st-hd .badge{flex:0 0 auto;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-family:"Space Mono",monospace;font-weight:700;font-size:20px;color:#fff;}
-  .st-hd h2{font-size:22px;font-weight:800;line-height:1.05;}
-  .st-hd .lo{font-size:13px;color:var(--muted);margin-top:5px;}
-  .task{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
-  .task .lab{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--flag);margin-bottom:7px;}
-  .task p{margin:0;font-size:14.5px;line-height:1.5;}
+  .stations{display:flex;flex-direction:column;gap:10px}
+  .st{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center;background:var(--card);padding:12px}
+  .st .n{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-family:var(--mono);border:2px solid var(--grey);color:var(--muted)}
+  .st.done .n{background:#111;border-color:#111;color:#fff}
+  .st.cur{background:var(--peach)}
+  .st.cur .n{background:var(--red);border-color:var(--red);color:#fff}
+  .st .t{font-weight:750;font-size:15px}
+  .st .s{font-size:13px;color:var(--muted)}
+  .st .r{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .st.locked .t{color:var(--muted)}
 
-  .q{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;}
-  .q .qn{font-size:11px;color:var(--muted);font-family:"Space Mono",monospace;margin-bottom:6px;}
-  .q .qt{font-family:"Bricolage Grotesque",sans-serif;font-weight:600;font-size:16px;line-height:1.25;margin-bottom:14px;}
-  .opts{display:grid;gap:9px;}
-  .opt{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--card2);border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14.5px;cursor:pointer;color:var(--ink);transition:border-color .12s,background .12s;}
-  .opt .k{flex:0 0 auto;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);display:grid;place-items:center;font-family:"Space Mono",monospace;font-size:12px;font-weight:700;color:var(--muted);}
-  .opt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent);}
-  .opt.correct .k{background:var(--good);border-color:var(--good);color:#fff;}
-  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent);}
-  .opt.wrong .k{background:var(--bad);border-color:var(--bad);color:#fff;}
-  .opt[disabled]{cursor:default;}
-  .expl{margin-top:12px;font-size:13px;line-height:1.45;color:var(--muted);background:var(--card2);border-radius:10px;padding:11px 13px;border:1px solid var(--line);}
-  .expl b{color:var(--ink);}
+  .scan{aspect-ratio:1;width:100%;background:#1b1918;border-radius:22px;border:2px solid #111;position:relative;overflow:hidden}
+  .scan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .scan .corner{position:absolute;width:46px;height:46px;border:5px solid var(--red)}
+  .c1{top:18%;left:18%;border-right:0!important;border-bottom:0!important;border-radius:10px 0 0 0}
+  .c2{top:18%;right:18%;border-left:0!important;border-bottom:0!important;border-radius:0 10px 0 0}
+  .c3{bottom:18%;left:18%;border-right:0!important;border-top:0!important;border-radius:0 0 0 10px}
+  .c4{bottom:18%;right:18%;border-left:0!important;border-top:0!important;border-radius:0 0 10px 0}
+  .scanline{position:absolute;left:20%;right:20%;height:2px;background:var(--salmon);box-shadow:0 0 12px var(--salmon);animation:scan 2.2s ease-in-out infinite alternate}
+  @keyframes scan{from{top:22%}to{top:78%}}
+  .scan .hint{color:#fff;font-size:13px;position:absolute;bottom:14px;left:0;right:0;text-align:center;padding:0 16px;text-shadow:0 1px 2px #000}
 
-  .done-note{background:color-mix(in srgb,var(--good) 12%,transparent);border:1px solid color-mix(in srgb,var(--good) 40%,transparent);border-radius:var(--r);padding:15px;text-align:center;margin-bottom:14px;}
-  .done-note .big{font-family:"Space Mono",monospace;font-size:26px;font-weight:700;color:var(--good);}
-  .done-note .sm{font-size:13px;color:var(--muted);margin-top:2px;}
+  .num-badge{display:inline-flex;align-items:baseline;gap:8px;color:var(--ink);font-size:16px;font-weight:800;align-self:flex-start}
+  .num-badge .big{font-family:var(--f);font-size:96px;font-weight:900;font-stretch:125%;color:var(--red);line-height:.8;letter-spacing:-.04em}
+  .story{position:relative;font-size:17px;line-height:1.55;background:#fff;border:2px solid #111;border-radius:18px 18px 18px 4px;padding:16px 18px;box-shadow:4px 4px 0 #111}
+  .group-banner{background:#111;color:#fff;border-radius:14px;box-shadow:4px 4px 0 var(--red);padding:16px;display:flex;flex-direction:column;gap:6px}
+  .group-banner b{font-size:20px;font-stretch:110%;color:var(--salmon)}
+  .q{font-weight:800;font-size:19px;font-stretch:106%;text-wrap:balance}
+  .opts{display:flex;flex-direction:column;gap:12px}
+  .opt{appearance:none;text-align:left;font:inherit;display:grid;grid-template-columns:36px 1fr;gap:12px;align-items:center;background:var(--card);padding:14px;cursor:pointer;color:var(--ink);transition:transform .12s, box-shadow .12s}
+  .opt:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111}
+  .opt .k{width:36px;height:36px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font-weight:900;text-transform:uppercase}
+  .opt .d{font-size:13px;color:var(--bad);display:block;margin-top:4px;font-weight:700}
+  .opt:disabled{opacity:.7;cursor:not-allowed;box-shadow:none;background:repeating-linear-gradient(-45deg,#fff 0 8px,#f3e2dc 8px 16px)}
+  .opt:disabled .k{background:var(--grey);color:var(--muted)}
 
-  .score-card{background:var(--brand);color:#fff;border-radius:22px;padding:26px 22px;text-align:center;box-shadow:var(--shadow);}
-  :root[data-theme="dark"] .score-card,:root:not([data-theme="light"]) .score-card{color:#06120e;}
-  .score-card .ey{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:600;}
-  .score-card .n{font-family:"Space Mono",monospace;font-size:52px;font-weight:700;line-height:1;margin:10px 0 2px;}
-  .score-card .of{font-size:13px;opacity:.85;}
-  .score-card .rings{display:flex;justify-content:center;gap:18px;margin-top:18px;flex-wrap:wrap;}
-  .score-card .ring{text-align:center;}
-  .score-card .ring b{font-family:"Space Mono",monospace;font-size:20px;display:block;}
-  .score-card .ring span{font-size:10.5px;opacity:.85;text-transform:uppercase;letter-spacing:.05em;}
-  .prize{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);display:flex;gap:14px;align-items:center;}
-  .prize .em{flex:0 0 auto;width:54px;height:54px;border-radius:14px;background:color-mix(in srgb,var(--gold) 16%,transparent);display:grid;place-items:center;font-size:26px;}
-  .prize .lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;}
-  .prize h3{font-size:17px;font-weight:700;margin:3px 0;}
-  .prize p{margin:0;font-size:13px;color:var(--muted);line-height:1.4;}
+  .deltas{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .dl{border:2px solid #111;border-radius:12px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:2px}
+  .dl .lbl{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .dl .v{font-family:var(--mono);font-weight:600;font-size:22px}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+  .pos{color:var(--good)} .neg{color:var(--bad)}
+  .tip{background:var(--card);padding:14px 16px;font-size:15px}
+  .tip b{display:block;margin-bottom:4px;color:var(--red)}
 
-  .fb{margin-top:22px;}
-  .fb h2{font-size:19px;font-weight:700;margin-bottom:4px;}
-  .field{margin-top:14px;}
-  .field label{display:block;font-size:13.5px;font-weight:600;margin-bottom:8px;}
-  .stars{display:flex;gap:8px;}
-  .star{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:22px;cursor:pointer;display:grid;place-items:center;transition:transform .08s,border-color .12s,background .12s;color:var(--gold);}
-  .star.on{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);}
-  .star:active{transform:scale(.9);}
-  .segs{display:flex;gap:8px;flex-wrap:wrap;}
-  .seg{flex:1;min-width:80px;border:1.5px solid var(--line);background:var(--card);border-radius:11px;padding:11px 8px;font-size:13.5px;cursor:pointer;color:var(--ink);text-align:center;}
-  .seg.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand-ink);font-weight:600;}
-  :root[data-theme="dark"] .seg.on,:root:not([data-theme="light"]) .seg.on{color:var(--brand);}
-  textarea{width:100%;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:12px;font-family:inherit;font-size:14px;resize:vertical;min-height:64px;}
-  textarea:focus,.opt:focus-visible,.seg:focus-visible,.star:focus-visible,.cta:focus-visible,.st:focus-visible,.linkbtn:focus-visible{outline:2px solid var(--flag);outline-offset:2px;}
+  .final-hero{background:#111;color:#fff;border-radius:14px;box-shadow:6px 6px 0 var(--red);padding:22px 18px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden}
+  .final-hero svg{position:absolute;right:-60px;top:-40px;width:260px;height:200px;pointer-events:none}
+  .final-hero .big{font-family:var(--mono);font-size:64px;font-weight:600;color:var(--salmon);line-height:1}
+  .final-hero .rank{font-size:20px;font-weight:850;font-stretch:110%}
+  .profile .name{font-size:28px;font-weight:900;font-stretch:118%;line-height:1}
+  .cats{display:flex;flex-direction:column;gap:10px}
+  .cat{background:var(--card);padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center}
+  .cat .nm{font-weight:800;display:flex;align-items:center;gap:8px}
+  .cat .v{font-family:var(--mono);font-size:20px;font-weight:600;text-align:right}
+  .cat .rk{grid-column:1 / -1;font-size:13px;color:var(--muted)}
+  .cat .track{grid-column:1 / -1;height:8px;border-radius:999px;background:#eee;overflow:hidden}
+  .cat .track span{display:block;height:100%}
 
-  .thanks{text-align:center;padding:26px 10px;}
-  .thanks .ic{width:70px;height:70px;border-radius:20px;background:color-mix(in srgb,var(--good) 15%,transparent);display:grid;place-items:center;margin:0 auto 16px;font-size:34px;}
-  .thanks h2{font-size:22px;font-weight:800;}
-  .thanks p{color:var(--muted);font-size:14.5px;line-height:1.5;margin:10px auto 0;max-width:38ch;}
+  /* dolní lišta: tři metriky */
+  .metricbar{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(3,1fr);background:#111;border-top:2px solid #111;padding-bottom:env(safe-area-inset-bottom)}
+  .mb{background:var(--mc);display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 4px;min-width:0}
+  .mb + .mb{border-left:2px solid #111}
+  .mb .num{font-family:var(--mono);font-size:20px;font-weight:600;color:#fff;line-height:1}
+  .mb .nm{font-size:12px;font-weight:700;letter-spacing:.04em;color:#fff}
+  .mb.bump{animation:bump .6s ease-out}
+  @keyframes bump{30%{transform:scale(1.12)}}
 
-  .lb{display:grid;gap:8px;margin-top:6px;}
-  .lb-row{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 14px;box-shadow:var(--shadow);}
-  .lb-row .pos{font-family:"Space Mono",monospace;font-weight:700;font-size:15px;width:26px;color:var(--muted);}
-  .lb-row.me{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,transparent);}
-  .lb-row .who{flex:1;font-weight:600;font-size:14px;}
-  .lb-row .pp{font-family:"Space Mono",monospace;font-weight:700;color:var(--brand-ink);}
-  :root[data-theme="dark"] .lb-row .pp,:root:not([data-theme="light"]) .lb-row .pp{color:var(--brand);}
-  .lb-row .medal{font-size:16px;}
-
-  .linkbtn{background:none;border:none;color:var(--flag);cursor:pointer;font:inherit;text-decoration:underline;padding:0;}
-  .orgline{margin-top:22px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5;}
-
-  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:90%;text-align:center;}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .loading{display:grid;place-items:center;min-height:60vh;color:var(--muted);gap:14px;}
-  .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
+  .fade{animation:fade .28s ease-out}
+  @keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.fade,.scanline,.mb.bump{animation:none}.opt{transition:none}}
 </style>
 </head>
 <body>
-<div id="app">
-  <div class="top">
-    <div class="top-in">
-      <div class="mark" aria-hidden="true"></div>
-      <div>
-        <div class="top-title">Trasa DOD</div>
-        <div class="top-sub">Poznej okolí a historii</div>
-      </div>
-      <div class="pts" id="ptsWrap" hidden title="Získané body"><b class="mono" id="ptsNum">0</b><span>bodů</span></div>
-      <div class="code-pill" id="codeWrap" hidden><b class="mono" id="codeTop">—</b><span>tvůj kód</span></div>
-      <button class="theme-btn" id="themeBtn" title="Světlý/tmavý režim" aria-label="Přepnout režim">◐</button>
-    </div>
-    <div class="bar"><i id="barFill"></i></div>
-  </div>
-
-  <section class="view" id="vLoad"><div class="loading"><div class="spinner"></div><div>Načítám trasu…</div></div></section>
-
-  <section class="view" id="vHome" hidden>
-    <div class="hero">
-      <div class="ey">Den otevřených dveří · 21. 11. 2026</div>
-      <h1>Poznej okolí a historii tvé budoucí školy</h1>
-      <p>Projdi si trasu deseti stanovišť po kampusu i okolí. Na každém tě čeká krátký úkol a kvíz — sbírej body a hraj o ceny od partnerů.</p>
-      <div class="meta">
-        <span class="chip">🚩 <b>10</b> stanovišť</span>
-        <span class="chip">⏱️ cca <b>60 min</b></span>
-        <span class="chip">🏆 až <b id="maxChip">1000</b> bodů</span>
-      </div>
-    </div>
-    <div class="how">
-      <div class="how-row"><div class="num">1</div><p><b>Klepni na „Spustit trasu“</b> — appka ti přidělí tvůj hrací kód.</p></div>
-      <div class="how-row"><div class="num">2</div><p><b>Na každém stanovišti</b> splň úkol a vyřeš kvíz. Za správné odpovědi máš body.</p></div>
-      <div class="how-row"><div class="num">3</div><p><b>Projdi všech 10</b> a na konci uvidíš skóre i své pořadí v žebříčku.</p></div>
-    </div>
-  </section>
-
-  <section class="view" id="vCode" hidden>
-    <div class="codebox">
-      <div class="lab">Tvůj hrací kód</div>
-      <div class="big mono" id="codeBig">DOD-••••</div>
-      <p><b>Zapiš si ho nebo vyfoť.</b> Slouží k tvému skóre v žebříčku a k vyzvednutí ceny u cíle. Postup se drží i v tomto telefonu.</p>
-    </div>
-  </section>
-
-  <section class="view" id="vRoute" hidden>
-    <div class="rhead"><h2>Tvoje trasa</h2><span class="cnt mono" id="routeCnt">0/10</span></div>
-    <p class="sub">Klepni na stanoviště, u kterého zrovna stojíš. Můžeš je plnit v libovolném pořadí.</p>
-    <div class="stations" id="stations"></div>
-    <p class="orgline">Máš hotovo, nebo končíš dřív? <button class="linkbtn" id="toFinish">Zobrazit skóre a žebříček →</button></p>
-  </section>
-
-  <section class="view" id="vStation" hidden>
-    <button class="back" id="stBack">← Zpět na trasu</button>
-    <div id="stContent"></div>
-  </section>
-
-  <section class="view" id="vFinish" hidden>
-    <button class="back" id="fnBack">← Zpět na trasu</button>
-    <div id="finishContent"></div>
-  </section>
-
-  <div class="stick" id="homeStick" hidden><button class="cta" id="startBtn">Spustit trasu 🚩</button></div>
-  <div class="stick" id="codeStick" hidden><button class="cta" id="codeGo">Mám kód, jdeme na to →</button></div>
+<div class="shell">
+  <header>
+    <span class="logo">VŠCHT<small>PRAHA</small></span>
+    <div class="hdr-info" id="hdrInfo"></div>
+    <div class="hdr-wallet" id="hdrWallet" hidden><div class="lbl">Úspory</div><div class="val" id="hdrKc">0 Kč</div></div>
+  </header>
+  <main id="app"></main>
+  <nav class="metricbar" id="metricbar" hidden aria-label="Tvoje body"></nav>
 </div>
 
-<div class="toast" id="toast"></div>
-
 <script>
-"use strict";
-const $ = s => document.querySelector(s);
-const API = ""; // stejný původ jako server
+// ---------------------------------------------------------------------------
+//  Aplikace pro hráče. Všechno důležité (body, Kč, trasa, pořadí) počítá
+//  server – tady se jen zobrazuje stav, který vrátí API.
+// ---------------------------------------------------------------------------
+const STORE_KEY = "dodCode";
+const METRIC_KEYS = ["f", "v", "p"];
+let CFG = null;      // /api/config – názvy a barvy metrik
+let ST = null;       // poslední stav hráče ze serveru
+let pendingQr = null; // kód z adresy ?qr=…, který se má po startu odemknout
+let prevMetrics = null;
 
-/* ---------- stav ---------- */
-let CFG = null;                 // konfigurace + stanoviště (bez odpovědí)
-let CODE = null;                // hrací kód
-let done = {};                  // { stationId: {points, correct} }
-let answers = {};               // { "stationId:qi": {chosen, correct, correctIndex, expl, points} }
-let points = 0;
+const $app = document.getElementById("app");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtKc = (n) => (n < 0 ? "−" : "") + Math.round(Math.abs(n)).toLocaleString("cs-CZ") + " Kč";
+const signed = (n) => (n > 0 ? "+" : n < 0 ? "−" : "") + Math.abs(n).toLocaleString("cs-CZ");
+const cls = (n) => (n > 0 ? "pos" : n < 0 ? "neg" : "");
 
-/* localStorage jen pro zapamatování kódu (pohodlí) */
-function saveCode(c){ try{ localStorage.setItem("dod-code", c); }catch(e){} }
-function loadCode(){ try{ return localStorage.getItem("dod-code"); }catch(e){ return null; } }
-function clearCode(){ try{ localStorage.removeItem("dod-code"); }catch(e){} }
+function storeGet() { try { return localStorage.getItem(STORE_KEY); } catch { return null; } }
+function storeSet(v) { try { v ? localStorage.setItem(STORE_KEY, v) : localStorage.removeItem(STORE_KEY); } catch {} }
 
-/* motiv (pohodlí) */
-try{ const t=localStorage.getItem("dod-theme"); if(t) document.documentElement.setAttribute("data-theme",t); }catch(e){}
-$("#themeBtn").addEventListener("click",()=>{
-  const cur=document.documentElement.getAttribute("data-theme");
-  const dark=cur?cur==="dark":matchMedia("(prefers-color-scheme:dark)").matches;
-  const next=dark?"light":"dark";
-  document.documentElement.setAttribute("data-theme",next);
-  try{ localStorage.setItem("dod-theme",next);}catch(e){}
-});
-
-/* ---------- pomocníci ---------- */
-const views={load:$("#vLoad"),home:$("#vHome"),code:$("#vCode"),route:$("#vRoute"),station:$("#vStation"),finish:$("#vFinish")};
-function show(v){ for(const k in views) views[k].hidden=(k!==v);
-  $("#homeStick").hidden=(v!=="home"); $("#codeStick").hidden=(v!=="code"); window.scrollTo(0,0); }
-let toastT;
-function toast(m){ const el=$("#toast"); el.textContent=m; el.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove("show"),2200); }
-const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-
-async function api(path, opts){
-  const r = await fetch(API+path, Object.assign({headers:{"Content-Type":"application/json"}}, opts));
-  if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||("Chyba "+r.status)); }
-  return r.json();
+// ---- API ------------------------------------------------------------------
+async function api(path, body) {
+  const res = await fetch(path, body
+    ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    : undefined);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw Object.assign(new Error(data.error || "Něco se pokazilo, zkus to znovu."), { status: res.status });
+  return data;
 }
 
-function station(id){ return CFG.stations.find(s=>s.id===id); }
-function recomputeTotals(){
-  points=0; done={};
-  for(const key in answers){ const a=answers[key]; points+=a.points;
-    const sid=key.split(":")[0]; (done[sid]=done[sid]||{points:0,correct:0}); done[sid].points+=a.points; done[sid].correct+=a.correct?1:0; }
-}
-function stationDone(id){ // splněno = zodpovězené všechny otázky stanoviště
-  const st=station(id); if(!st) return false;
-  return st.q.every((_,qi)=>(st.id+":"+qi) in answers);
-}
-function doneCount(){ return CFG.stations.filter(s=>stationDone(s.id)).length; }
-function updateHud(){
-  $("#ptsNum").textContent=points;
-  $("#routeCnt").textContent=doneCount()+"/"+CFG.stationCount;
-  $("#barFill").style.width=(doneCount()/CFG.stationCount*100)+"%";
-  $("#codeTop").textContent=CODE||"—";
-}
-
-/* ---------- trasa ---------- */
-function renderRoute(){
-  const wrap=$("#stations"); wrap.innerHTML="";
-  CFG.stations.forEach(st=>{
-    const isDone=stationDone(st.id);
-    const earned=done[st.id]?done[st.id].points:0;
-    const btn=document.createElement("button"); btn.className="st"; btn.type="button";
-    btn.innerHTML=`
-      <div class="badge ${isDone?'done':''}" style="${isDone?'':'color:var(--t-'+st.theme+')'}">${isDone?'✓':st.num}</div>
-      <div class="body"><div class="nm">${st.name}</div><div class="lo">📍 ${st.loc}</div></div>
-      <div class="rt"><span class="tag tag-${st.theme}">${CFG.themeLabels[st.theme]}</span>
-        ${isDone?`<div class="earn">+${earned} b</div>`:`<div class="arw">Otevřít →</div>`}</div>`;
-    btn.addEventListener("click",()=>openStation(st.id));
-    wrap.appendChild(btn);
-  });
-  updateHud();
+// ---- Rám: hlavička a dolní lišta ------------------------------------------
+function chrome() {
+  const on = !!ST;
+  document.getElementById("hdrWallet").hidden = !on;
+  document.getElementById("metricbar").hidden = !on;
+  if (!on) { document.getElementById("hdrInfo").textContent = ""; return; }
+  document.getElementById("hdrKc").textContent = fmtKc(ST.kc);
+  document.getElementById("hdrInfo").innerHTML =
+    `${ST.result ? "Cíl" : `Stanoviště ${ST.current + 1}/${ST.route.length}`}<br><span class="mono">${esc(ST.code)}</span>`;
+  document.getElementById("metricbar").innerHTML = METRIC_KEYS.map((k) => {
+    const m = CFG.metrics[k];
+    const bump = prevMetrics && prevMetrics[k] !== ST.metrics[k] ? " bump" : "";
+    return `<div class="mb${bump}" style="--mc:${m.color}"><span class="num">${signed(ST.metrics[k])}</span><span class="nm">${esc(m.name)}</span></div>`;
+  }).join("");
+  prevMetrics = { ...ST.metrics };
 }
 
-/* ---------- stanoviště ---------- */
-let current=null;
-function openStation(id){
-  current=station(id);
-  const c=$("#stContent"); const tv="--t-"+current.theme;
-  let html=`
-    <div class="st-hd">
-      <div class="badge" style="background:var(${tv})">${current.num}</div>
-      <div><span class="tag tag-${current.theme}">${CFG.themeLabels[current.theme]}</span>
-        <h2 style="margin-top:8px">${current.name}</h2><div class="lo">📍 ${current.loc}</div></div>
+function render(html) {
+  $app.innerHTML = `<div class="fade stack">${html}</div>`;
+  chrome();
+  window.scrollTo(0, 0);
+}
+
+function ellipseSVG(stroke) {
+  return `<svg viewBox="0 0 260 180" aria-hidden="true"><ellipse cx="150" cy="80" rx="120" ry="62" fill="none" stroke="${stroke}" stroke-width="2" transform="rotate(-14 150 80)"/><ellipse cx="150" cy="80" rx="96" ry="44" fill="none" stroke="${stroke}" stroke-width="1" opacity=".5" transform="rotate(-14 150 80)"/></svg>`;
+}
+const alertBox = (msg, info) => msg ? `<div class="alert${info ? " info" : ""}" role="alert">${esc(msg)}</div>` : "";
+
+// Podle stavu ze serveru vybere správnou obrazovku.
+function show(msg, info) {
+  if (ST.result) return vFinal();
+  if (ST.arrived && !ST.taskDone) return vTask(msg, info);
+  if (ST.arrived) return vStation(msg);
+  return vRoute(msg, info);
+}
+
+// ---- Úvod ------------------------------------------------------------------
+function vIntro(msg) {
+  ST = null;
+  const m = CFG.metrics;
+  render(`
+    <div class="ellipse-hero">
+      ${ellipseSVG("#e64010")}
+      <div class="eyebrow">Den otevřených dveří · Holešovice, Jankovcova</div>
+      <h1 style="margin-top:10px">Tvoje studium<br>na VŠCHT</h1>
     </div>
-    <div class="task"><div class="lab">Úkol na místě</div><p>${current.task}</p></div>`;
-  current.q.forEach((q,qi)=>{
-    html+=`<div class="q" data-qi="${qi}"><div class="qn">Otázka ${qi+1} z ${current.q.length}</div>
-      <div class="qt">${q.t}</div><div class="opts">`;
-    q.opts.forEach((o,oi)=>{ html+=`<button class="opt" data-oi="${oi}" type="button"><span class="k">${String.fromCharCode(65+oi)}</span><span>${o}</span></button>`; });
-    html+=`</div><div class="expl" hidden></div></div>`;
-  });
-  html+=`<button class="cta" id="stDone" hidden>Hotovo, zpět na trasu →</button>`;
-  c.innerHTML=html;
-
-  c.querySelectorAll(".q").forEach(qEl=>{
-    const qi=+qEl.dataset.qi;
-    const optEls=qEl.querySelectorAll(".opt");
-    const explEl=qEl.querySelector(".expl");
-    const key=current.id+":"+qi;
-    const prev=answers[key];
-    if(prev){ paintAnswer(optEls,explEl,prev.chosen,prev.correctIndex,prev.correct,prev.expl); }
-    else{
-      optEls.forEach((el,oi)=>el.addEventListener("click",()=>submitAnswer(current.id,qi,oi,optEls,explEl)));
-    }
-  });
-  if(stationDone(current.id)) $("#stDone").hidden=false;
-  $("#stDone").onclick=()=>{ renderRoute(); show("route"); };
-  show("station");
-}
-
-function paintAnswer(optEls,explEl,chosen,correctIndex,correct,expl){
-  optEls.forEach((el,oi)=>{ el.disabled=true;
-    if(oi===correctIndex) el.classList.add("correct");
-    if(oi===chosen && !correct) el.classList.add("wrong"); });
-  explEl.hidden=false;
-  explEl.innerHTML=(correct?"<b>Správně!</b> ":"<b>Správná odpověď: "+String.fromCharCode(65+correctIndex)+".</b> ")+expl;
-}
-
-async function submitAnswer(sid,qi,chosen,optEls,explEl){
-  optEls.forEach(el=>el.disabled=true);
-  try{
-    const res=await api("/api/answer",{method:"POST",body:JSON.stringify({code:CODE,station:sid,q:qi,chosen})});
-    answers[sid+":"+qi]={chosen,correct:res.correct,correctIndex:res.correctIndex,expl:res.expl,points:res.points};
-    recomputeTotals(); updateHud();
-    paintAnswer(optEls,explEl,chosen,res.correctIndex,res.correct,res.expl);
-    if(res.scored && res.points>0) toast("+"+res.points+" bodů");
-    if(stationDone(sid)){
-      const btn=$("#stDone"); btn.hidden=false;
-      if(doneCount()===CFG.stationCount){ btn.textContent="Dokončit trasu – zobrazit skóre 🏆"; btn.classList.add("flag"); btn.onclick=openFinish; }
-    }
-  }catch(e){
-    optEls.forEach(el=>el.disabled=false);
-    toast("⚠️ "+e.message+" — zkus to znovu");
-  }
-}
-
-/* ---------- cíl ---------- */
-function prizeFor(pct){
-  if(pct>=0.8) return {em:"🏆",lab:"Hlavní cena",h:"Poukaz od Alzy",p:"Skvělý výkon! Ukaž svůj kód u cílového stanoviště a vyzvedni si hlavní odměnu partnera."};
-  if(pct>=0.5) return {em:"☕",lab:"Odměna",h:"Káva v kavárně Na Zastávce",p:"Dobrá práce! U cíle si podle kódu vyzvedni poukaz na kávu a drobnost."};
-  return {em:"🎒",lab:"Za účast",h:"Účastnická drobnost",p:"Díky, že ses zúčastnil/a! U cíle na tebe podle kódu čeká malá pozornost."};
-}
-async function openFinish(){
-  show("finish");
-  $("#finishContent").innerHTML=`<div class="loading"><div class="spinner"></div><div>Počítám výsledky…</div></div>`;
-  let fin;
-  try{ fin=await api("/api/finish",{method:"POST",body:JSON.stringify({code:CODE})}); }
-  catch(e){ $("#finishContent").innerHTML=`<p class="sub">⚠️ ${e.message}</p><button class="cta" onclick="location.reload()">Zkusit znovu</button>`; return; }
-  const pct=fin.maxPoints?fin.points/fin.maxPoints:0;
-  const pr=prizeFor(pct);
-  let lb=[];
-  try{ const r=await api("/api/leaderboard"); lb=r.board; }catch(e){}
-
-  let html=`
-    <div class="score-card">
-      <div class="ey">Tvoje skóre${fin.rank?` · ${fin.rank}. místo`:""}</div>
-      <div class="n mono">${fin.points}</div><div class="of">z ${fin.maxPoints} možných bodů</div>
-      <div class="rings">
-        <div class="ring"><b class="mono">${fin.stationsDone}/${CFG.stationCount}</b><span>stanovišť</span></div>
-        <div class="ring"><b class="mono">${Math.round(pct*100)}%</b><span>úspěšnost</span></div>
-        ${fin.rank?`<div class="ring"><b class="mono">${fin.rank}. / ${fin.totalPlayers}</b><span>pořadí</span></div>`:""}
+    ${alertBox(msg)}
+    <p class="story">Zkus si nanečisto celé studium: bydlení, zkouškové, Erasmus i první výplatu. Projdeš ${CFG.routeLength} stanovišť, na každém tě čeká kus příběhu a jedno rozhodnutí. Na konci uvidíš, jak jsi dopadl/a a jak sis vedl/a proti ostatním.</p>
+    <div class="rules">
+      <div class="rule"><span class="ico">QR</span><div><b>Stanoviště jdou popořadě</b><span class="muted">Každé odemkneš naskenováním QR kódu na místě.</span></div></div>
+      <div class="rule"><span class="ico">3×</span><div><b>Sbíráš body ve třech oblastech</b><span class="muted"><b style="color:${m.f.color}">${esc(m.f.name)}</b>, <b style="color:${m.v.color}">${esc(m.v.name)}</b> a <b style="color:#c47a12">${esc(m.p.name)}</b>. Uvidíš je dole na liště.</span></div></div>
+      <div class="rule"><span class="ico">Kč</span><div><b>Začínáš s ${fmtKc(CFG.startKc)}</b><span class="muted">Některé možnosti si musíš umět dovolit.</span></div></div>
+      <div class="rule"><span class="ico">✈</span><div><b>Tvoje volby rozhodnou o Erasmu</b><span class="muted">Podle bodů se trasa v půlce rozdělí.</span></div></div>
+    </div>
+    <div class="field">
+      <label for="nick">Přezdívka do žebříčku (nepovinné, nepiš celé jméno)</label>
+      <input type="text" id="nick" maxlength="40" autocomplete="off" placeholder="např. Chemik007">
+    </div>
+    <button class="btn" id="startBtn" onclick="start()">Začít hru</button>
+    <details class="card" style="gap:10px">
+      <summary style="cursor:pointer;font-weight:700">Už hraješ? Obnov hru kódem</summary>
+      <div class="manual">
+        <label for="restore" style="position:absolute;left:-9999px">Hrací kód</label>
+        <input type="text" id="restore" placeholder="DOD-XXXX" autocomplete="off">
+        <button class="btn ghost" onclick="restore()">Obnovit</button>
       </div>
-    </div>
-    <div class="prize"><div class="em">${pr.em}</div>
-      <div><div class="lab">${pr.lab}</div><h3>${pr.h}</h3><p>${pr.p}</p></div></div>`;
-
-  if(lb.length){
-    html+=`<h2 style="font-size:18px;margin:24px 0 4px">🏆 Žebříček — TOP ${lb.length}</h2>
-      <p class="sub">Aktuální pořadí všech hráčů.</p><div class="lb">`;
-    lb.forEach(r=>{ const me=(r.name===CODE);
-      const medal=r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"";
-      html+=`<div class="lb-row ${me?'me':''}"><span class="pos">${r.rank}.</span>
-        <span class="who">${r.name}${me?" (ty)":""} ${medal?`<span class="medal">${medal}</span>`:""}</span>
-        <span class="pp">${r.points} b</span></div>`; });
-    html+=`</div>`;
-  }
-
-  html+=`<div id="fbSlot"></div>`;
-  $("#finishContent").innerHTML=html;
-  renderFeedback();
+    </details>
+  `);
 }
 
-function renderFeedback(){
-  const slot=$("#fbSlot");
-  slot.innerHTML=`
-    <div class="fb"><h2>Jak se ti trasa líbila?</h2>
-      <p class="sub">Pomoz nám akci příště vylepšit — zabere to půl minuty.</p>
-      <div class="field"><label>Celková spokojenost</label>
-        <div class="stars" id="stars">${[1,2,3,4,5].map(n=>`<button class="star" type="button" data-n="${n}" aria-label="${n} z 5">★</button>`).join("")}</div></div>
-      <div class="field"><label>Doporučil/a bys DOD kamarádovi?</label>
-        <div class="segs" id="rec">
-          <button class="seg" type="button" data-v="Určitě ano">Určitě ano</button>
-          <button class="seg" type="button" data-v="Spíš ano">Spíš ano</button>
-          <button class="seg" type="button" data-v="Spíš ne">Spíš ne</button></div></div>
-      <div class="field"><label for="fbBest">Co tě nejvíc bavilo?</label><textarea id="fbBest" placeholder="Např. chemický pokus, kavárna…"></textarea></div>
-      <div class="field"><label for="fbImprove">Co bychom měli zlepšit?</label><textarea id="fbImprove" placeholder="Napiš cokoli, co ti chybělo…"></textarea></div>
-      <button class="cta" id="fbSend" style="margin-top:18px">Odeslat hodnocení</button>
+async function start() {
+  const btn = document.getElementById("startBtn");
+  btn.disabled = true;
+  try {
+    ST = await api("/api/register", { nickname: document.getElementById("nick").value });
+    storeSet(ST.code);
+    vCode();
+  } catch (e) { btn.disabled = false; vIntro(e.message); }
+}
+
+async function restore() {
+  let code = document.getElementById("restore").value.trim().toUpperCase();
+  if (code && !code.startsWith("DOD-")) code = "DOD-" + code;
+  try {
+    ST = await api("/api/me/" + encodeURIComponent(code));
+    storeSet(ST.code);
+    show("Hra obnovena. Pokračuj tam, kde jsi skončil/a.", true);
+  } catch (e) { vIntro(e.status === 404 ? "Tenhle kód neznáme. Zkontroluj ho." : e.message); }
+}
+
+function vCode() {
+  render(`
+    <div class="eyebrow">Tvůj hrací kód</div>
+    <div class="card" style="align-items:center;padding:28px 18px">
+      <div class="mono" style="font-size:40px;font-weight:600;letter-spacing:.06em">${esc(ST.code)}</div>
+      <p class="muted" style="text-align:center">Vyfoť si ho. Kdyby se ti zavřel prohlížeč, hru s ním obnovíš.</p>
     </div>
-    <p class="orgline">Díky za zpětnou vazbu i za účast. Užij si zbytek dne otevřených dveří! 💚</p>`;
-  let rating=0, rec="";
-  slot.querySelectorAll("#stars .star").forEach(s=>s.addEventListener("click",()=>{ rating=+s.dataset.n;
-    slot.querySelectorAll("#stars .star").forEach(x=>x.classList.toggle("on",+x.dataset.n<=rating)); }));
-  slot.querySelectorAll("#rec .seg").forEach(b=>b.addEventListener("click",()=>{ rec=b.dataset.v;
-    slot.querySelectorAll("#rec .seg").forEach(x=>x.classList.toggle("on",x===b)); }));
-  $("#fbSend").addEventListener("click",async()=>{
-    if(!rating){ toast("Vyber prosím počet hvězd ★"); return; }
-    const btn=$("#fbSend"); btn.disabled=true; btn.textContent="Odesílám…";
-    try{
-      await api("/api/feedback",{method:"POST",body:JSON.stringify({code:CODE,rating,recommend:rec,best:$("#fbBest").value.trim(),improve:$("#fbImprove").value.trim()})});
-      slot.innerHTML=`<div class="thanks"><div class="ic">💚</div><h2>Zpětná vazba odeslána</h2><p>Díky! Tvoje hodnocení už máme. Užij si zbytek dne otevřených dveří.</p></div>`;
-      toast("Děkujeme za hodnocení! 💚");
-    }catch(e){ btn.disabled=false; btn.textContent="Odeslat hodnocení"; toast("⚠️ "+e.message); }
+    <div class="card"><p><b>Startuješ s ${fmtKc(ST.kc)}</b> naspořenými od rodičů a z brigády. Dole na liště uvidíš své body.</p></div>
+    <button class="btn" onclick="afterStart()">Jdeme na to</button>
+  `);
+}
+function afterStart() {
+  if (pendingQr) { const t = pendingQr; pendingQr = null; return unlock(t); }
+  vRoute();
+}
+
+// ---- Trasa a skenování ------------------------------------------------------
+function vRoute(msg, info) {
+  stopScan();
+  const rows = ST.route.map((r, i) => {
+    const s = i < ST.current ? "done" : i === ST.current ? "cur" : "locked";
+    // Za Přístavem se trasa liší – dokud hráč neví, kam půjde, nevidí pořadí.
+    const hidden = s === "locked" && !ST.group && i > 5 && i < ST.route.length - 2;
+    const name = hidden ? "Podle tvých bodů" : r.place;
+    const right = s === "done" ? "hotovo" : s === "cur" ? "teď" : "🔒";
+    return `<div class="st ${s}"><span class="n">${i + 1}</span><div><div class="t">${esc(name)}</div></div><span class="r">${right}</span></div>`;
+  }).join("");
+  const next = ST.route[ST.current];
+  render(`
+    <div><div class="eyebrow">Trasa · ${ST.current}/${ST.route.length} hotovo</div>
+      <h2 style="margin-top:6px">Další zastávka: ${esc(next.place)}</h2></div>
+    ${alertBox(msg, info)}
+    <button class="btn" onclick="vScan()">Naskenovat QR</button>
+    <div class="manual">
+      <label for="manualCode" style="position:absolute;left:-9999px">Kód stanoviště</label>
+      <input type="text" id="manualCode" placeholder="Nejde to? Opiš kód" maxlength="12" autocomplete="off">
+      <button class="btn ghost" onclick="manualUnlock()">OK</button>
+    </div>
+    <div class="stations">${rows}</div>
+    <p class="muted" style="font-size:13px;text-align:center">Tvůj kód pro obnovení hry: <b class="mono">${esc(ST.code)}</b></p>
+  `);
+}
+
+function manualUnlock() {
+  const v = document.getElementById("manualCode").value.trim();
+  if (v) unlock(v);
+}
+
+async function unlock(token) {
+  stopScan();
+  try {
+    ST = await api("/api/unlock", { code: ST.code, token });
+    show(ST.notice, true);
+  } catch (e) {
+    if (e.status === 404) { storeSet(null); return vIntro(e.message); }
+    ST.arrived && !ST.taskDone ? vTask(e.message) : vRoute(e.message);
+  }
+}
+
+// Z naskenovaného textu vytáhne kód (QR obsahuje odkaz …/?qr=KOD).
+function tokenFrom(text) {
+  try { const q = new URL(text).searchParams.get("qr"); if (q) return q; } catch {}
+  return text.trim();
+}
+
+// Čtečka QR: BarcodeDetector (Chrome/Android), jinak knihovna jsQR (iPhone).
+let scan = null;
+function vScan(back) {
+  render(`
+    <div><div class="eyebrow">${back === "task" ? "Úkol" : `Stanoviště ${ST.current + 1}`}</div>
+      <h2 style="margin-top:6px">${back === "task" ? "Naskenuj QR od obsluhy" : "Naskenuj QR kód na místě"}</h2></div>
+    <div class="scan"><video id="video" playsinline muted></video>
+      <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+      <span class="scanline"></span><span class="hint" id="scanHint">Spouštím kameru…</span></div>
+    <button class="btn ghost" onclick="${back === "task" ? "vTask()" : "vRoute()"}">Zpět</button>
+  `);
+  startScan(back);
+}
+
+async function startScan() {
+  const hint = document.getElementById("scanHint");
+  const video = document.getElementById("video");
+  if (!navigator.mediaDevices?.getUserMedia) { hint.textContent = "Tenhle prohlížeč kameru nepodporuje. Opiš kód pod QR."; return; }
+  let detect;
+  try {
+    if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
+      const bd = new BarcodeDetector({ formats: ["qr_code"] });
+      detect = async () => (await bd.detect(video))[0]?.rawValue;
+    } else {
+      await loadJsQR();
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      detect = async () => {
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        if (!canvas.width) return null;
+        ctx.drawImage(video, 0, 0);
+        return jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)?.data;
+      };
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    scan = { stream, timer: null };
+    video.srcObject = stream;
+    await video.play();
+    hint.textContent = "Namiř kameru na QR kód";
+    const tick = async () => {
+      if (!scan) return;
+      try {
+        const text = await detect();
+        if (text) { navigator.vibrate?.(80); return unlock(tokenFrom(text)); }
+      } catch {}
+      if (scan) scan.timer = setTimeout(tick, 250);
+    };
+    tick();
+  } catch (e) {
+    stopScan();
+    hint.textContent = e.name === "NotAllowedError"
+      ? "Kamera není povolená. Povol ji v nastavení prohlížeče, nebo se vrať a opiš kód."
+      : "Kameru se nepodařilo spustit. Vrať se a opiš kód pod QR.";
+  }
+}
+function stopScan() {
+  if (!scan) return;
+  clearTimeout(scan.timer);
+  scan.stream.getTracks().forEach((t) => t.stop());
+  scan = null;
+}
+function loadJsQR() {
+  if (window.jsQR) return Promise.resolve();
+  return new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js";
+    s.onload = ok; s.onerror = fail;
+    document.head.appendChild(s);
   });
 }
 
-/* ---------- navigace ---------- */
-$("#startBtn").addEventListener("click",async()=>{
-  const btn=$("#startBtn"); btn.disabled=true; btn.textContent="Připravuji…";
-  try{
-    const r=await api("/api/register",{method:"POST",body:JSON.stringify({})});
-    CODE=r.code; saveCode(CODE);
-    $("#codeBig").textContent=CODE; $("#codeWrap").hidden=false; $("#ptsWrap").hidden=false;
-    updateHud(); show("code");
-  }catch(e){ toast("⚠️ "+e.message); btn.disabled=false; btn.textContent="Spustit trasu 🚩"; }
-});
-$("#codeGo").addEventListener("click",()=>{ renderRoute(); show("route"); });
-$("#stBack").addEventListener("click",()=>{ renderRoute(); show("route"); });
-$("#fnBack").addEventListener("click",()=>{ renderRoute(); show("route"); });
-$("#toFinish").addEventListener("click",openFinish);
-
-/* ---------- start ---------- */
-async function boot(){
-  try{ CFG=await api("/api/config"); }
-  catch(e){ $("#vLoad").innerHTML=`<div class="loading"><div>⚠️ Nepodařilo se načíst trasu.</div><button class="cta" onclick="location.reload()" style="max-width:200px">Zkusit znovu</button></div>`; return; }
-  $("#maxChip").textContent=CFG.maxPoints;
-
-  const saved=loadCode();
-  if(saved){
-    try{
-      const me=await api("/api/me/"+saved);
-      CODE=saved;
-      me.answers.forEach(a=>{ answers[a.station+":"+a.q]={chosen:a.chosen,correct:a.correct,correctIndex:a.correctIndex,expl:a.expl,points:a.points}; });
-      recomputeTotals();
-      $("#codeWrap").hidden=false; $("#ptsWrap").hidden=false; updateHud(); renderRoute();
-      show("route"); return;
-    }catch(e){ clearCode(); } // server neúčastníka nezná (např. čistá DB) → nový start
-  }
-  show("home");
+// ---- Stanoviště --------------------------------------------------------------
+function stationHead() {
+  const s = ST.station;
+  return `
+    <span class="num-badge"><span class="big">${s.num}</span>/ ${ST.route.length}</span>
+    <div><div class="eyebrow">${esc(s.place)}</div><h2 style="margin-top:6px">${esc(s.title)}</h2></div>`;
 }
-boot();
+
+function vTask(msg) {
+  render(`
+    ${stationHead()}
+    ${alertBox(msg)}
+    <div class="card"><div class="eyebrow">Úkol</div><p>${esc(ST.station.taskText)}</p></div>
+    <p class="muted">Až úkol splníš, obsluha ti ukáže QR kód. Naskenuj ho a pokračuj.</p>
+    <button class="btn" onclick="vScan('task')">Naskenovat QR od obsluhy</button>
+    <div class="manual">
+      <input type="text" id="manualCode" placeholder="Nebo opiš kód" maxlength="12" autocomplete="off" aria-label="Kód úkolu">
+      <button class="btn ghost" onclick="manualUnlock()">OK</button>
+    </div>
+  `);
+}
+
+function vStation(msg) {
+  const s = ST.station;
+  const opts = s.opts.map((o, j) => `
+    <button class="opt" ${o.locked ? "disabled" : ""} onclick="answer(${j}, this)">
+      <span class="k">${"abcdef"[j]}</span>
+      <span>${esc(o.t)}${o.locked ? `<span class="d">🔒 ${esc(o.lockText)}</span>` : ""}</span>
+    </button>`).join("");
+  render(`
+    ${stationHead()}
+    ${alertBox(msg)}
+    ${s.group ? `<div class="group-banner"><b>${esc(s.group.name)}</b><span>${esc(s.group.why)}</span></div>` : ""}
+    <p class="story">${esc(s.story)}</p>
+    <p class="q">${esc(s.q)}</p>
+    <div class="opts">${opts}</div>
+  `);
+}
+
+async function answer(choice, el) {
+  document.querySelectorAll(".opt").forEach((b) => (b.disabled = true));
+  el.style.background = "var(--peach)";
+  const station = ST.station;
+  try {
+    const res = await api("/api/answer", { code: ST.code, station: station.id, choice });
+    ST = res;
+    vResult(station, res.answer);
+  } catch (e) {
+    try { ST = await api("/api/me/" + ST.code); } catch {}
+    show(e.message);
+  }
+}
+
+function vResult(station, a) {
+  const m = CFG.metrics;
+  const tiles = METRIC_KEYS.map((k) => `
+    <div class="dl"><span class="lbl"><span class="dot" style="background:${m[k].color}"></span>${esc(m[k].name)}</span>
+      <span class="v ${cls(a.fx[k])}">${signed(a.fx[k])}</span></div>`).join("");
+  const quiz = a.correct === null ? "" : a.correct
+    ? `<div class="alert info" style="border-color:var(--good);color:var(--good)">Správně!</div>`
+    : `<div class="alert">Tohle není správně.</div>`;
+  const nextName = ST.result ? "" : ST.route[ST.current].place;
+  render(`
+    <div class="eyebrow">${esc(station.place)} · hotovo</div>
+    <div class="card">
+      <div class="muted" style="font-size:14px">Tvoje volba</div>
+      <p style="font-weight:700">${esc(a.choiceText)}</p>
+      ${a.result ? `<p>${esc(a.result)}</p>` : ""}
+    </div>
+    ${quiz}
+    <div class="deltas">
+      ${tiles}
+      <div class="dl"><span class="lbl"><span class="dot" style="background:#111"></span>Úspory</span>
+        <span class="v ${cls(a.kc)}">${a.kc ? (a.kc > 0 ? "+" : "") + fmtKc(a.kc) : "0 Kč"}</span></div>
+    </div>
+    <button class="btn" onclick="vRoute()">${nextName ? `Pokračovat: ${esc(nextName)}` : "Pokračovat"}</button>
+  `);
+}
+
+// ---- Cíl ---------------------------------------------------------------------
+function vFinal() {
+  stopScan();
+  const r = ST.result, m = CFG.metrics;
+  const color = (k) => (k === "p" ? "#c47a12" : m[k].color); // žlutá je na bílé málo čitelná
+  const cats = METRIC_KEYS.map((k) => `
+    <div class="cat">
+      <span class="nm"><span class="dot" style="background:${m[k].color}"></span>${esc(m[k].name)}</span>
+      <span class="v ${cls(r.metrics[k])}">${signed(r.metrics[k])}</span>
+      <span class="rk">${r.categories[k].rank}. místo z ${r.of} v kategorii</span>
+    </div>`).join("");
+  render(`
+    <div class="final-hero">
+      ${ellipseSVG("#e64010")}
+      <div class="eyebrow" style="color:var(--salmon)">Promoce · tvoje Životní skóre</div>
+      <div class="big">${r.score}<span style="font-size:24px;opacity:.7"> / 100</span></div>
+      <div class="rank">${r.rank}. místo z ${r.of}</div>
+      <div><b style="font-size:18px">${esc(r.band.t)}</b><br><span style="opacity:.85">${esc(r.band.d)}</span></div>
+    </div>
+    <div class="card profile">
+      <div class="eyebrow">Tvůj profil</div>
+      <div class="name" style="color:${color(r.profile.id)}">${esc(r.profile.name)}</div>
+      <p>${esc(r.profile.text)}</p>
+    </div>
+    <div class="cats">${cats}
+      <div class="cat"><span class="nm"><span class="dot" style="background:#111"></span>Úspory</span>
+        <span class="v ${r.kc < 0 ? "neg" : ""}">${fmtKc(r.kc)}</span>
+        ${r.kc < 0 ? `<span class="rk">Studium jsi zakončil/a v dluhu.</span>` : ""}</div>
+    </div>
+    <div class="card" style="background:var(--red);color:#fff">
+      <b style="font-size:18px">Ukaž tuhle obrazovku v cíli</b>
+      <span>Ceny dostane celkově nejlepší hráč a nejlepší v každé kategorii. Pořadí se mění, jak dobíhají další hráči.</span>
+    </div>
+    <button class="btn ghost" onclick="refresh()">Aktualizovat pořadí</button>
+    <button class="linkbtn" onclick="newGame()">Začít novou hru</button>
+  `);
+}
+
+async function refresh() {
+  try { ST = await api("/api/me/" + ST.code); show(); } catch (e) { vFinal(); }
+}
+function newGame() {
+  if (!confirm("Opravdu začít znovu? Tahle hra zůstane uložená pod kódem " + ST.code + ".")) return;
+  storeSet(null);
+  vIntro();
+}
+
+// ---- Start aplikace ----------------------------------------------------------
+(async function boot() {
+  const params = new URLSearchParams(location.search);
+  pendingQr = params.get("qr");
+  if (pendingQr) history.replaceState(null, "", location.pathname); // ať se kód neodemyká znovu při obnovení stránky
+  try {
+    CFG = await api("/api/config");
+  } catch {
+    $app.innerHTML = alertBox("Nepodařilo se spojit se serverem. Zkontroluj internet a obnov stránku.");
+    return;
+  }
+  const code = storeGet();
+  if (code) {
+    try { ST = await api("/api/me/" + encodeURIComponent(code)); } catch { storeSet(null); ST = null; }
+  }
+  if (!ST) return vIntro(pendingQr ? "Nejdřív začni hru, stanoviště se pak odemkne samo." : "");
+  if (pendingQr) { const t = pendingQr; pendingQr = null; return unlock(t); }
+  show();
+})();
 </script>
 </body>
 </html>
