@@ -290,6 +290,12 @@ app.get("/admin", (_req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
 });
 
+// Kontrola pro Azure (Health check) – odpoví, jen když funguje i databáze.
+app.get("/api/health", (_req, res) => {
+  store.allParticipants();
+  res.json({ ok: true });
+});
+
 // Obrazovka do cíle (žebříček na velkou obrazovku).
 app.get("/cil", (_req, res) => {
   res.sendFile(join(__dirname, "public", "cil.html"));

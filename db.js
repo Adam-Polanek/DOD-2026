@@ -11,7 +11,11 @@ const DB_PATH = process.env.DB_PATH || "./data/dod.sqlite";
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);
-db.exec("PRAGMA journal_mode = WAL;");
+// Na Azure (proměnná WEBSITE_SITE_NAME) leží databáze na síťovém disku /home,
+// kde režim WAL nefunguje spolehlivě – tam se použije klasický režim DELETE.
+const JOURNAL = process.env.WEBSITE_SITE_NAME ? "DELETE" : "WAL";
+db.exec(`PRAGMA journal_mode = ${JOURNAL};`);
+db.exec("PRAGMA busy_timeout = 5000;"); // když je DB zrovna zamčená, počkat místo chyby
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS participants (
