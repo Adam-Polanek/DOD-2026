@@ -18,11 +18,14 @@ const { STATIONS, METRICS } = game;
 const BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
+// Na Azure běží server za proxy – bez tohohle by odkazy v QR začínaly http:// místo https://.
+app.set("trust proxy", true);
 app.use(express.json());
 app.use(express.static(join(__dirname, "public")));
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "zmen-me";
+const DEFAULT_SECRETS = { admin: !process.env.ADMIN_TOKEN, qr: !process.env.QR_SECRET };
 
 // --- Generování unikátního kódu účastníka: DOD-XXXX -------------------------
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -246,14 +249,23 @@ function allResults() {
 app.get("/api/admin/leaderboard", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const board = allResults();
-  res.json({ board, stats: { total: board.length, finished: board.filter((r) => r.finished_at).length } });
+  res.json({
+    board,
+    stations: game.publicStations(),
+    defaultSecrets: DEFAULT_SECRETS,
+    stats: { total: board.length, finished: board.filter((r) => r.finished_at).length },
+  });
 });
 
 // Kódy do QR pro tisk. URL vede na hru, která stanoviště sama odemkne.
 app.get("/api/admin/qr", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const base = `${req.protocol}://${req.get("host")}`;
-  res.json({ codes: game.allTokens().map((t) => ({ ...t, url: `${base}/?qr=${t.token}` })) });
+  res.json({
+    base,
+    defaultSecret: DEFAULT_SECRETS.qr, // true = QR_SECRET není nastavený, kódy se po nasazení změní
+    codes: game.allTokens().map((t) => ({ ...t, url: `${base}/?qr=${t.token}` })),
+  });
 });
 
 // Export do CSV (otevře se v Excelu).
@@ -276,6 +288,11 @@ app.get("/api/admin/export.csv", (req, res) => {
 
 app.get("/admin", (_req, res) => {
   res.sendFile(join(__dirname, "public", "admin.html"));
+});
+
+// Obrazovka do cíle (žebříček na velkou obrazovku).
+app.get("/cil", (_req, res) => {
+  res.sendFile(join(__dirname, "public", "cil.html"));
 });
 
 app.listen(PORT, () => {

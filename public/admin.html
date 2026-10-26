@@ -2,145 +2,254 @@
 <html lang="cs">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DOD – Admin přehled</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin DOD hry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..48,600..800&family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <style>
   :root{
-    --paper:#0f1613; --panel:#17211d; --panel2:#1d2925; --ink:#eef3f0; --muted:#93a49c; --line:#2a3a34;
-    --brand:#39bfa0; --flag:#ff7a5f; --gold:#f0b53f; --good:#4fca6b;
-    --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 30px rgba(0,0,0,.45);
-    color-scheme:dark; font-family:"Instrument Sans",system-ui,sans-serif;
+    --red:#e64010; --salmon:#ef8364; --peach:#fff4ef; --grey:#d9d9d9;
+    --ink:#161412; --muted:#5d4c46; --bg:#f9d3c8; --card:#fff;
+    --good:#1f8a4c; --bad:#c0271b;
+    --c-f:#4a8af0; --c-v:#e64010; --c-p:#f2a33a;
+    --f:"Archivo", "Helvetica Neue", Arial, sans-serif;
+    --mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+    color-scheme:light;
   }
-  *{box-sizing:border-box;}
-  body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#16241f,var(--paper));color:var(--ink);
-       min-height:100vh;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);}
-  h1,h2{font-family:"Bricolage Grotesque",sans-serif;margin:0;letter-spacing:-.01em;}
-  .mono{font-family:"Space Mono",monospace;font-variant-numeric:tabular-nums;}
-  .wrap{max-width:900px;margin:0 auto;padding:22px 18px 60px;}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg)}
+  body{color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.45}
+  header{position:sticky;top:0;z-index:5;background:var(--red);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .logo{font-weight:900;font-stretch:112%;font-size:15px;background:#111;color:#fff;padding:4px 8px;border-radius:3px}
+  header h1{font-size:18px;margin:0;font-weight:850;font-stretch:110%}
+  nav.tabs{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  .tab{appearance:none;font:inherit;font-weight:800;background:transparent;color:#fff;border:2px solid #fff;border-radius:999px;padding:6px 14px;cursor:pointer;text-decoration:none;font-size:14px}
+  .tab.on,.tab:hover{background:#fff;color:var(--red)}
+  main{max-width:1200px;margin:0 auto;padding:20px 16px 48px;display:flex;flex-direction:column;gap:18px}
+  h2{font-size:22px;margin:0;font-weight:850;font-stretch:110%}
+  p{margin:0}
+  .muted{color:var(--muted)}
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .card{background:var(--card);border:2px solid #111;box-shadow:4px 4px 0 #111;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+  .btn{appearance:none;font:inherit;font-weight:800;font-size:15px;padding:10px 16px;border-radius:999px;background:#111;color:#fff;border:2px solid #111;box-shadow:3px 3px 0 var(--red);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+  .btn:hover{background:var(--red)}
+  .btn.ghost{background:#fff;color:#111;box-shadow:3px 3px 0 #111}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  input{font:inherit;padding:10px 12px;border-radius:10px;border:2px solid #111;background:#fff;min-width:0}
+  .alert{border:2px solid var(--bad);background:#fff;color:var(--bad);border-radius:12px;padding:12px 14px;font-weight:700}
+  .warn{border:2px dashed var(--red);background:var(--peach);border-radius:12px;padding:12px 14px}
 
-  /* login */
-  .gate{max-width:380px;margin:12vh auto;background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:30px 26px;box-shadow:var(--shadow);}
-  .gate .mk{width:44px;height:44px;border-radius:12px;background:var(--brand);position:relative;margin-bottom:16px;}
-  .gate .mk::after{content:"";position:absolute;inset:0;margin:auto;width:15px;height:15px;background:var(--flag);border-radius:3px;transform:rotate(45deg);}
-  .gate h1{font-size:22px;font-weight:800;}
-  .gate p{color:var(--muted);font-size:14px;line-height:1.5;margin:8px 0 18px;}
-  .gate input{width:100%;background:var(--panel2);border:1.5px solid var(--line);border-radius:12px;color:var(--ink);padding:13px 14px;font-family:"Space Mono",monospace;font-size:15px;}
-  .gate button{width:100%;margin-top:12px;border:none;border-radius:12px;background:var(--brand);color:#04120e;font-weight:700;font-size:15px;padding:14px;cursor:pointer;}
-  .err{color:var(--flag);font-size:13px;margin-top:10px;min-height:1em;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat .v{font-family:var(--mono);font-size:32px;font-weight:600;line-height:1}
+  .stat .l{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .funnel{display:flex;flex-direction:column;gap:6px}
+  .fn{display:grid;grid-template-columns:150px 1fr 40px;gap:10px;align-items:center;font-size:14px}
+  .fn .track{height:12px;border-radius:999px;background:#eee;overflow:hidden}
+  .fn .track span{display:block;height:100%;background:#111}
 
-  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:20px;}
-  header h1{font-size:24px;font-weight:800;}
-  header .live{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);padding:6px 12px;border-radius:999px;}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:pulse 2s infinite;}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 60%,transparent)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
-  header .sp{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;}
-  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:11px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px;}
-  .btn.primary{background:var(--brand);color:#04120e;border-color:transparent;}
+  .tablewrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #eadbd5;white-space:nowrap}
+  th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  td.num{font-family:var(--mono);text-align:right}
+  tr.playing td{color:var(--muted)}
+  .pill{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#eee}
+  .pill.fin{background:var(--good);color:#fff}
 
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:22px;}
-  .stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);}
-  .stat b{font-family:"Space Mono",monospace;font-size:30px;display:block;line-height:1;}
-  .stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+  /* QR k tisku */
+  .sheets{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+  .sheet{background:#fff;border:2px solid #111;border-radius:14px;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+  .sheet .brand{align-self:stretch;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+  .sheet .brand .logo{font-size:13px}
+  .sheet .place{font-size:26px;font-weight:900;font-stretch:115%;line-height:1.05}
+  .sheet .title{font-size:16px;color:var(--muted)}
+  .sheet .qr svg{width:100%;height:auto;display:block}
+  .sheet .qr{width:100%;max-width:260px}
+  .sheet .code{font-family:var(--mono);font-size:30px;font-weight:600;letter-spacing:.14em;border:2px solid #111;border-radius:10px;padding:4px 14px}
+  .sheet .how{font-size:13px;color:var(--muted)}
+  .sheet .kind{font-size:12px;font-weight:800;color:#fff;background:var(--red);padding:3px 10px;border-radius:999px}
 
-  table{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);}
-  th,td{padding:12px 14px;text-align:left;font-size:14px;border-bottom:1px solid var(--line);}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--panel2);}
-  tr:last-child td{border-bottom:none;}
-  td.n,th.n{text-align:right;font-family:"Space Mono",monospace;}
-  .pos{font-family:"Space Mono",monospace;font-weight:700;color:var(--muted);}
-  .top1 .pos{color:var(--gold);} .top2 .pos,.top3 .pos{color:var(--ink);}
-  .pp{font-family:"Space Mono",monospace;font-weight:700;color:var(--brand);}
-  .code{font-family:"Space Mono",monospace;color:var(--muted);font-size:12.5px;}
-  .empty{color:var(--muted);text-align:center;padding:40px;}
-  .foot{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;}
+  @media print{
+    @page{size:A4;margin:12mm}
+    html,body{background:#fff}
+    header,.noprint{display:none!important}
+    main{padding:0;max-width:none}
+    .sheets{display:block}
+    .sheet{border:0;border-radius:0;height:270mm;justify-content:center;gap:6mm;break-after:page;page-break-after:always;padding:0}
+    .sheet .brand{position:absolute;top:0;left:0;right:0}
+    .sheet{position:relative}
+    .sheet .place{font-size:44pt}
+    .sheet .title{font-size:20pt}
+    .sheet .qr{max-width:140mm}
+    .sheet .code{font-size:40pt}
+    .sheet .how{font-size:14pt;max-width:150mm}
+  }
 </style>
 </head>
 <body>
-<!-- LOGIN -->
-<div id="gate" class="gate">
-  <div class="mk"></div>
-  <h1>Admin přehled</h1>
-  <p>Zadej admin token (nastavený v proměnné <span class="mono">ADMIN_TOKEN</span> na serveru).</p>
-  <input id="token" type="password" placeholder="admin token" autocomplete="current-password">
-  <button id="enter">Vstoupit</button>
-  <div class="err" id="err"></div>
-</div>
+<header>
+  <span class="logo">VŠCHT</span>
+  <h1>Admin hry</h1>
+  <nav class="tabs" id="tabs" hidden>
+    <button class="tab on" data-tab="overview">Přehled</button>
+    <button class="tab" data-tab="qr">QR k tisku</button>
+    <a class="tab" href="/cil" target="_blank" rel="noopener">Obrazovka do cíle ↗</a>
+  </nav>
+</header>
 
-<!-- DASHBOARD -->
-<div id="dash" class="wrap" hidden>
-  <header>
-    <h1>🚩 Trasa DOD — žebříček</h1>
-    <span class="live"><span class="dot"></span> živě · obnovuje se každých 10 s</span>
-    <div class="sp">
-      <a class="btn" id="exportBtn" href="#" download>⬇︎ Export CSV (Excel)</a>
-      <button class="btn primary" id="refreshBtn">Obnovit teď</button>
-    </div>
-  </header>
-  <div class="stats">
-    <div class="stat"><b class="mono" id="sTotal">0</b><span>účastníků</span></div>
-    <div class="stat"><b class="mono" id="sFinished">0</b><span>dokončilo trasu</span></div>
-    <div class="stat"><b class="mono" id="sMax">0</b><span>max bodů</span></div>
+<main id="login">
+  <div class="card" style="max-width:420px">
+    <h2>Přihlášení</h2>
+    <p class="muted">Zadej admin token (proměnná <span class="mono">ADMIN_TOKEN</span> na serveru).</p>
+    <input id="token" type="password" placeholder="admin token" autocomplete="current-password">
+    <div id="loginErr"></div>
+    <button class="btn" onclick="login()">Vstoupit</button>
   </div>
-  <table>
-    <thead><tr><th style="width:60px">Pořadí</th><th>Hráč</th><th class="n">Body</th><th class="n">Stanovišť</th><th class="n">Správně</th><th>Dokončeno</th></tr></thead>
-    <tbody id="rows"><tr><td colspan="6" class="empty">Načítám…</td></tr></tbody>
-  </table>
-  <p class="foot" id="foot"></p>
-</div>
+</main>
+
+<main id="overview" hidden>
+  <div id="warnings"></div>
+  <div class="row noprint">
+    <h2 style="margin-right:auto">Přehled hráčů</h2>
+    <span class="muted" id="updated"></span>
+    <button class="btn ghost" onclick="loadOverview()">Obnovit</button>
+    <a class="btn" id="exportBtn" href="#">Stáhnout Excel (CSV)</a>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="card">
+    <h2 style="font-size:17px">Kde hráči jsou</h2>
+    <p class="muted" style="font-size:13px">Kolik hráčů má hotový daný počet stanovišť. Velký skok dolů = tam lidé odpadají.</p>
+    <div class="funnel" id="funnel"></div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:17px">Hráči</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>#</th><th>Kód</th><th>Přezdívka</th><th>Skóre</th><th>Kč</th><th>Fin.</th><th>Vzd.</th><th>Pož.</th><th>Profil</th><th>Skupina</th><th>Stav</th><th>Začal</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </div>
+</main>
+
+<main id="qr" hidden>
+  <div class="noprint" style="display:flex;flex-direction:column;gap:12px">
+    <div class="row"><h2 style="margin-right:auto">QR kódy k tisku</h2><button class="btn" onclick="window.print()">Tisknout (A4, 1 stanoviště na stránku)</button></div>
+    <div id="qrWarnings"></div>
+    <p class="muted">QR jsou podle <b>míst</b>, ne čísel – Banka a Kanceláře mají číslo podle trasy hráče. Pod každým QR je kód k opsání.</p>
+  </div>
+  <div class="sheets" id="sheets"></div>
+</main>
 
 <script>
-"use strict";
-const $=s=>document.querySelector(s);
-let TOKEN=null, timer=null;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtKc = (n) => (n < 0 ? "−" : "") + Math.abs(n).toLocaleString("cs-CZ");
+const time = (iso) => iso ? new Date(iso).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" }) : "";
+const GROUPS = { erasmus: "Erasmus", doma: "doma" };
+let TOKEN = "";
+let timer = null;
 
-function fmtTime(iso){ if(!iso) return "—"; const d=new Date(iso);
-  return d.toLocaleTimeString("cs-CZ",{hour:"2-digit",minute:"2-digit"}); }
-
-async function load(){
-  try{
-    const r=await fetch("/api/admin/leaderboard?token="+encodeURIComponent(TOKEN));
-    if(r.status===401){ fail("Neplatný token."); return false; }
-    const j=await r.json();
-    $("#sTotal").textContent=j.stats.total;
-    $("#sFinished").textContent=j.stats.finished;
-    $("#sMax").textContent=j.maxPoints;
-    const rows=$("#rows");
-    if(!j.board.length){ rows.innerHTML=`<tr><td colspan="6" class="empty">Zatím žádní účastníci. Jakmile někdo spustí trasu, objeví se tu.</td></tr>`; }
-    else{
-      rows.innerHTML=j.board.map((r,i)=>{
-        const pos=i+1; const medal=pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":"";
-        const cls=pos<=3?("top"+pos):"";
-        const name=r.nickname?`${r.nickname} <span class="code">${r.code}</span>`:`<span class="code">${r.code}</span>`;
-        return `<tr class="${cls}"><td class="pos">${pos}. ${medal}</td><td>${name}</td>
-          <td class="n pp">${r.points}</td><td class="n">${r.stations}</td><td class="n">${r.correct_answers}</td>
-          <td>${r.finished_at?fmtTime(r.finished_at):'<span style="color:var(--muted)">probíhá</span>'}</td></tr>`;
-      }).join("");
-    }
-    $("#foot").textContent="Poslední aktualizace "+new Date().toLocaleTimeString("cs-CZ");
-    return true;
-  }catch(e){ $("#foot").textContent="⚠️ Chyba spojení se serverem."; return true; }
+async function api(path) {
+  const r = await fetch(path + (path.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(TOKEN));
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw Object.assign(new Error(data.error || "Chyba serveru"), { status: r.status });
+  return data;
 }
-function fail(msg){ $("#err").textContent=msg; $("#gate").hidden=false; $("#dash").hidden=true; if(timer) clearInterval(timer); }
 
-async function enter(){
-  TOKEN=$("#token").value.trim();
-  if(!TOKEN){ $("#err").textContent="Zadej token."; return; }
-  $("#err").textContent="";
-  $("#exportBtn").href="/api/admin/export.csv?token="+encodeURIComponent(TOKEN);
-  $("#gate").hidden=true; $("#dash").hidden=false;
-  const ok=await load();          // vrátí false jen při 401 → fail() vrátí zpět na login
-  if(!ok) return;
-  try{ sessionStorage.setItem("dod-admin",TOKEN); }catch(e){}
-  if(timer) clearInterval(timer); timer=setInterval(load,10000);
+async function login() {
+  TOKEN = $("token").value.trim();
+  try {
+    await loadOverview();
+    try { sessionStorage.setItem("dod-admin", TOKEN); } catch {}
+    $("login").hidden = true;
+    $("tabs").hidden = false;
+    $("exportBtn").href = "/api/admin/export.csv?token=" + encodeURIComponent(TOKEN);
+    showTab("overview");
+  } catch (e) {
+    $("loginErr").innerHTML = `<div class="alert">${e.status === 401 ? "Neplatný token." : esc(e.message)}</div>`;
+  }
 }
-$("#enter").addEventListener("click",enter);
-$("#token").addEventListener("keydown",e=>{ if(e.key==="Enter") enter(); });
-$("#refreshBtn").addEventListener("click",load);
 
-// auto-login v rámci relace
-try{ const t=sessionStorage.getItem("dod-admin"); if(t){ $("#token").value=t; enter(); } }catch(e){}
+function showTab(name) {
+  document.querySelectorAll(".tab[data-tab]").forEach((t) => t.classList.toggle("on", t.dataset.tab === name));
+  $("overview").hidden = name !== "overview";
+  $("qr").hidden = name !== "qr";
+  clearInterval(timer);
+  if (name === "overview") { loadOverview(); timer = setInterval(loadOverview, 20000); }
+  if (name === "qr") loadQr();
+}
+$("tabs").addEventListener("click", (e) => { const t = e.target.closest("[data-tab]"); if (t) showTab(t.dataset.tab); });
+$("token").addEventListener("keydown", (e) => { if (e.key === "Enter") login(); });
+
+// ---- Přehled ---------------------------------------------------------------
+async function loadOverview() {
+  const d = await api("/api/admin/leaderboard");
+  const fin = d.board.filter((r) => r.finished_at);
+  const avg = fin.length ? Math.round(fin.reduce((a, r) => a + r.score, 0) / fin.length) : "–";
+  const erasmus = d.board.filter((r) => r.group === "erasmus").length;
+  const grouped = d.board.filter((r) => r.group).length;
+
+  $("warnings").innerHTML = d.defaultSecrets.admin || d.defaultSecrets.qr
+    ? `<div class="warn"><b>Pozor:</b> na serveru ${[d.defaultSecrets.admin && "není nastavený <span class='mono'>ADMIN_TOKEN</span>", d.defaultSecrets.qr && "není nastavený <span class='mono'>QR_SECRET</span>"].filter(Boolean).join(" a ")}. Před akcí nastavit!</div>` : "";
+
+  $("stats").innerHTML = [
+    ["Začalo hrát", d.stats.total], ["Dokončilo", d.stats.finished],
+    ["Právě hraje", d.stats.total - d.stats.finished], ["Průměrné skóre", avg],
+    ["Na Erasmu", grouped ? `${Math.round(erasmus / grouped * 100)} %` : "–"],
+  ].map(([l, v]) => `<div class="card stat"><span class="v">${v}</span><span class="l">${l}</span></div>`).join("");
+
+  const n = d.stations.length;
+  const reached = Array.from({ length: n + 1 }, (_, k) => d.board.filter((r) => r.stationsDone >= k).length);
+  const max = Math.max(1, reached[0]);
+  $("funnel").innerHTML = reached.slice(1).map((c, i) => `
+    <div class="fn"><span>${i + 1 === n ? "Došli do cíle" : `Za ${i + 1}. stanovištěm`}</span>
+      <span class="track"><span style="width:${c / max * 100}%"></span></span><b class="mono">${c}</b></div>`).join("");
+
+  let rank = 0;
+  $("rows").innerHTML = d.board.map((r) => `
+    <tr class="${r.finished_at ? "" : "playing"}">
+      <td class="num">${r.finished_at ? ++rank : ""}</td>
+      <td class="mono">${esc(r.code)}</td><td>${esc(r.nickname || "")}</td>
+      <td class="num"><b>${r.score}</b></td><td class="num">${fmtKc(r.kc)}</td>
+      <td class="num">${r.metrics.f}</td><td class="num">${r.metrics.v}</td><td class="num">${r.metrics.p}</td>
+      <td>${esc(r.profileName)}</td><td>${GROUPS[r.group] || ""}</td>
+      <td>${r.finished_at ? `<span class="pill fin">v cíli ${time(r.finished_at)}</span>` : `<span class="pill">${r.stationsDone}/${n}</span>`}</td>
+      <td>${time(r.created_at)}</td>
+    </tr>`).join("") || `<tr><td colspan="12" class="muted">Zatím nikdo nehraje.</td></tr>`;
+  $("updated").textContent = "aktualizováno " + new Date().toLocaleTimeString("cs-CZ");
+}
+
+// ---- QR k tisku ------------------------------------------------------------
+function qrSvg(text) {
+  const q = qrcode(0, "M");
+  q.addData(text);
+  q.make();
+  return q.createSvgTag({ cellSize: 8, margin: 2, scalable: true });
+}
+
+async function loadQr() {
+  const d = await api("/api/admin/qr");
+  const host = new URL(d.base).hostname;
+  const warn = [];
+  if (host === "localhost" || /^[\d.]+$/.test(host)) warn.push(`QR teď vedou na <span class="mono">${esc(d.base)}</span>, což mobily venku neotevřou. <b>Tiskni až z ostré adresy na Azure.</b>`);
+  if (d.defaultSecret) warn.push(`Na serveru není nastavený <span class="mono">QR_SECRET</span>, kódy se po jeho nastavení změní. <b>Netiskni, dokud není nastavený.</b>`);
+  $("qrWarnings").innerHTML = warn.map((w) => `<div class="warn">${w}</div>`).join("");
+
+  $("sheets").innerHTML = d.codes.map((c) => `
+    <section class="sheet">
+      <div class="brand"><span class="logo">VŠCHT</span><span>Den otevřených dveří</span></div>
+      ${c.kind === "task" ? `<span class="kind">QR pro obsluhu – úkol splněn</span>` : ""}
+      <div class="place">${esc(c.place)}</div>
+      <div class="title">${esc(c.title)}</div>
+      <div class="qr">${qrSvg(c.url)}</div>
+      <div class="code">${esc(c.token)}</div>
+      <p class="how">Naskenuj tlačítkem <b>„Naskenovat QR“</b> ve hře, nebo fotoaparátem mobilu. Nejde to? Opiš kód do hry.</p>
+    </section>`).join("");
+}
+
+try { const t = sessionStorage.getItem("dod-admin"); if (t) { $("token").value = t; login(); } } catch {}
 </script>
 </body>
 </html>
