@@ -1,139 +1,131 @@
-# Trasa DOD — kvízová webová aplikace pro terénní část dne otevřených dveří
+# Studium na VŠCHT – finanční hra pro den otevřených dveří
 
-Mobilní webová hra pro 10 stanovišť: účastník naskenuje QR kód, dostane svůj
-hrací kód, na každém stanovišti splní úkol a kvíz, sbírá body a na konci vidí
-skóre i pořadí v žebříčku. Organizátoři mají živý přehled a export výsledků.
+Mobilní webová hra pro terénní část DOD VŠCHT (Praha-Holešovice, Jankovcova).
+Uchazeč projde 10 stanovišť, na každém naskenuje QR kód, přečte kus příběhu
+ze studia a rozhodne se (a/b/c). Každá volba mění tři oblasti – **finance,
+vzdělání, požitky** – a úspory v Kč. Podle bodů se trasa v půlce rozdělí
+(Erasmus / doma). V cíli hráč uvidí své **Životní skóre 0–100**, profil
+a pořadí mezi ostatními.
 
-- **Frontend** (`public/index.html`) — appka pro účastníky, běží v mobilu bez instalace.
-- **Backend** (`server.js`, `db.js`, `questions.js`) — Node + Express + SQLite.
-- **Admin** (`public/admin.html`) — živý žebříček na projektor + export do CSV/Excelu.
+- **Hra pro hráče:** `/` – běží v mobilu, bez instalace a bez osobních údajů
+  (hráč dostane anonymní kód `DOD-XXXX`).
+- **Přehled pro organizátory:** `/admin` – hráči, výsledky, export do Excelu, QR k tisku.
+- **Obrazovka do cíle:** `/cil` – žebříček na monitor nebo projektor.
 
-Body počítá **server**, správné odpovědi se do prohlížeče nikdy neposílají —
-nejde tedy podvádět čtením kódu stránky.
+Body počítá **server**. Do mobilu se neposílá, kolik která odpověď dává bodů,
+takže nejde podvádět úpravou stránky.
 
 ---
 
-## 1) Rychlé spuštění na vlastním počítači (test)
+## 1) Spuštění na vlastním počítači
 
-Potřebuješ **Node.js verze 22.5 nebo novější** (`node --version`).
+Potřebuješ **Node.js 22 nebo novější** (`node --version`).
 
 ```bash
-npm install
+npm install     # jen poprvé
 npm start
 ```
 
-Pak otevři:
-- Účastník: <http://localhost:3000>
-- Admin přehled: <http://localhost:3000/admin> (token je ve výchozím stavu `zmen-me`)
+Pak otevři <http://localhost:3000> (hra), <http://localhost:3000/admin>
+(heslo ve výchozím stavu `zmen-me`) a <http://localhost:3000/cil>.
+Zastavení: `Ctrl + C`. Data se ukládají do `data/dod.sqlite`.
 
-Zastavení: `Ctrl+C`. Data se ukládají do `data/dod.sqlite`.
+Kódy stanovišť pro zkoušení najdeš v `/admin` → záložka **QR k tisku**.
 
-Nastavení přes proměnné prostředí (volitelné, zkopíruj `.env.example` → `.env`):
+## 2) Nasazení na Azure App Service
 
-| Proměnná | Význam | Výchozí |
+Kód je na GitHubu a Azure si ho po každém `git push` sám stáhne a nasadí
+(GitHub Actions, záložka **Actions** v repozitáři).
+
+Nastavení aplikace v Azure Portalu:
+
+| Kde | Co |
+|---|---|
+| Vytvoření Web App | Publish **Code**, **Node 22 LTS**, **Linux**, plán **Basic B1** (Free má denní limit a v den akce by se mohl zastavit) |
+| Settings → Environment variables | `ADMIN_TOKEN`, `QR_SECRET`, `DB_PATH=/home/data/dod.sqlite` |
+| Settings → Configuration → General | **Always on: On** |
+| Monitoring → Health check | cesta `/api/health` |
+| Scale out | **1 instance** (databáze SQLite neunese víc serverů najednou) |
+
+Hesla vygeneruješ v Terminálu příkazem `openssl rand -hex 16`.
+
+## 3) Nastavení (proměnné prostředí)
+
+| Proměnná | K čemu je | Výchozí |
 |---|---|---|
-| `PORT` | port serveru | `3000` |
-| `ADMIN_TOKEN` | heslo do admin přehledu a exportu | `zmen-me` |
-| `DB_PATH` | cesta k databázi | `./data/dod.sqlite` |
+| `ADMIN_TOKEN` | heslo do `/admin` a exportu | `zmen-me` – **změnit!** |
+| `QR_SECRET` | z něj se počítají kódy v QR | `zmen-me-qr` – **změnit před tiskem QR a pak už nikdy** |
+| `DB_PATH` | kde leží databáze | `./data/dod.sqlite` |
+| `PORT` | port serveru | `3000` (Azure nastaví sám) |
 
----
+⚠ Když se `QR_SECRET` změní, všechny vytištěné QR kódy přestanou platit.
 
-## 2) Nasazení na internet — Render.com (krok za krokem)
+## 4) Úprava otázek a stanovišť
 
-> ⚠️ **Důležité pro den akce — kam se ukládají data.**
-> Databáze je soubor na disku serveru. Na **bezplatném** plánu Renderu se server
-> po ~15 minutách bez provozu **uspí** a jeho disk je dočasný — při uspání nebo
-> novém nasazení by se **výsledky smazaly**. Pro ostrou akci proto zvol placený
-> plán **Starter (~7 $/měs) + trvalý disk (~0,25 $/GB)**; server pak běží pořád
-> a data přežijí. Po akci můžeš službu zase zrušit — reálně to vyjde na pár dolarů.
-> Bezplatný plán je fajn jen na testování (a průběžně si dělej **Export CSV**).
+Všechen obsah je v jediném souboru **`questions.js`**. Design ani server se
+kvůli tomu měnit nemusí. Jedna odpověď vypadá takhle:
 
-### A. Připrav si kód na GitHubu
-1. Založ si účet na <https://github.com> (pokud nemáš).
-2. Vytvoř nový repozitář (např. `dod-trasa`) a nahraj do něj obsah této složky.
-   (Buď přes web „Add file → Upload files", nebo přes `git`.)
+```js
+{ t: "Kolej – 5 000 Kč měsíčně za dvoulůžkový pokoj…",   // text odpovědi
+  fx: { f: 1, v: 0, p: 1 },   // body: f finance, v vzdělání, p požitky
+  kc: -5000,                  // změna úspor v Kč
+  r: "Rychle si najdeš kamarády…",   // co se stalo (ukáže se po odpovědi)
+  needs: { kc: 10000 },       // nepovinné: podmínka, jinak je možnost zamčená
+},
+```
 
-### B. Vytvoř službu na Renderu
-1. Registrace na <https://render.com> (jde přihlásit přes GitHub).
-2. **New → Web Service** a vyber svůj repozitář `dod-trasa`.
-3. Render sám pozná Node. Zkontroluj:
-   - **Build Command:** `npm install`
-   - **Start Command:** `npm start`
-   - **Instance Type:** pro akci vyber **Starter** (kvůli datům, viz výše).
-4. **Environment → Add Environment Variable:**
-   - `ADMIN_TOKEN` = *tvé tajné heslo* (např. `dodTeam8-2026!`)
-   - `DB_PATH` = `/data/dod.sqlite`
-5. **Disks → Add Disk** (jen u placeného plánu):
-   - **Name:** `dod-data`, **Mount Path:** `/data`, **Size:** `1 GB`
-6. **Create Web Service.** Za pár minut dostaneš veřejnou adresu, např.
-   `https://dod-trasa.onrender.com`.
+- Stanoviště s jiným textem pro skupinu Erasmus a doma má `variants: { erasmus: {…}, doma: {…} }`.
+- O tom, kdo jede na Erasmus, rozhoduje funkce `chooseGroup()` (dole v souboru).
+- Texty označené `[NÁVRH]` jsou zástupné a mají se nahradit finálními.
 
-> 💡 Ve složce je i `render.yaml` (Blueprint) — když v Renderu zvolíš
-> **New → Blueprint**, předvyplní většinu nastavení za tebe. `ADMIN_TOKEN`
-> stejně zadáš ručně.
+Po úpravě: vyzkoušet lokálně (`npm start`), pak `git commit` a `git push`.
+Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejich volby.
 
-### C. Hotovo — adresy
-- Účastníci: `https://dod-trasa.onrender.com`
-- Admin přehled: `https://dod-trasa.onrender.com/admin`
+## 5) Před akcí – kontrolní seznam
 
-*(Alternativy k Renderu: Railway, Fly.io — postup je obdobný: připojit repozitář,
-nastavit start `npm start`, přidat proměnnou `ADMIN_TOKEN` a trvalý disk na `/data`.)*
+- [ ] Na Azure nastavené `ADMIN_TOKEN` a `QR_SECRET` (admin stránka jinak varuje).
+- [ ] Finální texty ve `questions.js`, žádné `[NÁVRH]`.
+- [ ] QR kódy vytisknout **z ostré adresy** (`https://…azurewebsites.net/admin`
+      → QR k tisku → Tisknout). Z `localhost` nefungují.
+- [ ] Projít celou trasu s mobily (iPhone i Android) a vytištěnými QR.
+- [ ] Smazat testovací hráče: v Azure smazat soubor `/home/data/dod.sqlite`
+      (Development Tools → SSH) a restartovat aplikaci.
 
----
+## 6) V den akce
 
-## 3) QR kód na stanoviště a plakáty
+- `/admin` na notebooku organizátora: kdo hraje, kde lidé odpadají.
+- `/cil` na monitoru v cíli – obnovuje se sama.
+- Hráč, kterému nejde QR: opíše 6znakový kód pod QR. Zavřený prohlížeč:
+  hru obnoví svým kódem `DOD-XXXX`.
+- Průběžně stahovat **Excel (CSV)** z `/admin` jako zálohu.
+- Ceny: celkově nejlepší + nejlepší v každé oblasti (vidět na `/cil`).
 
-Vytvoř QR kód, který vede na adresu appky (`https://…onrender.com`), jakýmkoli
-generátorem (např. napiš do vyhledávače „QR code generator"). Ten samý QR dej
-na start i na letáky. Účastníci ho naskenují foťákem v mobilu a appka se otevře.
+## 7) Po akci
 
----
-
-## 4) Jak upravit otázky a stanoviště
-
-Vše je v jednom souboru: **`questions.js`**.
-
-- Každé stanoviště má `name`, `loc` (kde stojí), `task` (úkol na místě) a pole `q` s otázkami.
-- U otázky je `t` (text), `opts` (možnosti) a `a` = **index správné odpovědi**
-  (0 = první možnost, 1 = druhá, …) a `expl` (vysvětlení po odpovědi).
-- Otázky v **[hranatých závorkách]** jsou schválně k doplnění reálných
-  místních údajů (rok založení školy, historický milník města) — najdeš je
-  u stanovišť `s1` a `s8`.
-
-Body za správnou odpověď se řídí `POINTS_PER_CORRECT` (výchozí 50). Maximum
-skóre se dopočítá samo. Po úpravě `questions.js` server restartuj (na Renderu
-stačí nové nasazení / „Manual Deploy").
-
-Hranice cen (kdo dostane co) se nastavují ve funkci `prizeFor` — v `public/index.html`
-(text pro účastníka) a odpovídají procentům skóre (≥ 80 % hlavní cena, ≥ 50 % střední).
-
----
-
-## 5) V den akce — pro organizátory
-
-- Otevři **admin přehled** na projektoru/notebooku, zadej `ADMIN_TOKEN`.
-  Žebříček se sám obnovuje každých 10 s.
-- Ceny předáváš podle **hracího kódu** účastníka (vidíš ho v žebříčku i v exportu).
-- **Export CSV** kdykoli stáhne všechny výsledky (otevře se v Excelu, se správnou diakritikou) —
-  hodí se do závěrečné dokumentace projektu.
-- Zpětná vazba účastníků se ukládá do databáze (tabulka `feedback`).
+- Stáhnout finální export z `/admin`.
+- V Azure aplikaci **zastavit** (Stop) nebo smazat skupinu prostředků
+  `dod-2026`, ať zbytečně neplatí.
+- Na další ročník: nový `QR_SECRET` = nové QR kódy, prázdná databáze.
 
 ## Bezpečnost a soukromí
-- **Určitě změň `ADMIN_TOKEN`** z výchozí hodnoty na vlastní heslo.
-- Účastníci jsou anonymní (jen náhodný kód `DOD-XXXX`), žádné osobní údaje se nesbírají.
 
----
+- Žádné osobní údaje: jen anonymní kód a nepovinná přezdívka.
+- Hesla nejsou v kódu (repozitář je veřejný), nastavují se jen na serveru.
 
 ## Struktura projektu
+
 ```
-dod-app/
-├─ server.js          # Express server + API
-├─ db.js              # datová vrstva (SQLite)
-├─ questions.js       # ← ZDE upravuješ stanoviště a otázky
-├─ public/
-│  ├─ index.html      # appka pro účastníky (mobil)
-│  └─ admin.html      # přehled pro organizátory
-├─ render.yaml        # konfigurace nasazení (volitelné)
-├─ package.json
-└─ data/              # sem se ukládá databáze (vzniká sama)
+server.js          server a API, hlídá pořadí stanovišť
+game.js            pravidla: výpočet bodů (replay), trasa, skóre, QR kódy
+questions.js       obsah: příběhy, otázky, body, Kč
+db.js              databáze SQLite (ukládá jen volby hráčů)
+public/index.html  hra pro hráče
+public/admin.html  přehled pro organizátory + QR k tisku
+public/cil.html    žebříček do cíle
+navrh/             mockupy a podklady na schůzky
+dokumenty/         projektové řízení (zadání, plánování, charta, otázky od týmu)
 ```
+
+API (pro vývojáře): `GET /api/config`, `POST /api/register`, `GET /api/me/:code`,
+`POST /api/unlock`, `POST /api/answer`, `POST /api/feedback`, `GET /api/leaderboard`,
+`GET /api/health`, `GET /api/admin/leaderboard|qr|export.csv?token=…`.
