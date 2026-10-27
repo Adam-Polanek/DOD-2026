@@ -362,7 +362,9 @@ function vScan(back) {
 async function startScan() {
   const hint = document.getElementById("scanHint");
   const video = document.getElementById("video");
-  if (!navigator.mediaDevices?.getUserMedia) { hint.textContent = "Tenhle prohlížeč kameru nepodporuje. Opiš kód pod QR."; return; }
+  // Kameru prohlížeče pustí jen na zabezpečené adrese (https nebo localhost).
+  if (!window.isSecureContext) { hint.textContent = "Čtečka ve hře tady nefunguje (adresa není https). Naskenuj QR fotoaparátem telefonu, nebo se vrať a opiš kód."; return; }
+  if (!navigator.mediaDevices?.getUserMedia) { hint.textContent = "Tenhle prohlížeč kameru nepodporuje. Naskenuj QR fotoaparátem telefonu, nebo opiš kód."; return; }
   let detect;
   try {
     if ("BarcodeDetector" in window && (await BarcodeDetector.getSupportedFormats()).includes("qr_code")) {
