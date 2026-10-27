@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Terénní kvízová trasa pro Den otevřených dveří – backend + frontend",
   "type": "module",
-  "main": "server.js",
+  "main": "server/server.js",
   "scripts": {
-    "start": "node --experimental-sqlite server.js"
+    "start": "node --experimental-sqlite server/server.js"
   },
   "engines": {
     "node": ">=22.5.0"

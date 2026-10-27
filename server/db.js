@@ -5,9 +5,11 @@
 // ---------------------------------------------------------------------------
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DB_PATH = process.env.DB_PATH || "./data/dod.sqlite";
+// Výchozí databáze leží v data/ ve složce projektu (o úroveň výš než server/).
+const DB_PATH = process.env.DB_PATH || join(dirname(fileURLToPath(import.meta.url)), "..", "data", "dod.sqlite");
 mkdirSync(dirname(DB_PATH), { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);

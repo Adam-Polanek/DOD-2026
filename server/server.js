@@ -3,7 +3,7 @@
 //  Spuštění:  npm install  &&  npm start
 //  Nastavení přes proměnné prostředí (volitelné):
 //    PORT         port serveru (výchozí 3000)
-//    DB_PATH      cesta k databázi (výchozí ./data/dod.sqlite)
+//    DB_PATH      cesta k databázi (výchozí data/dod.sqlite ve složce projektu)
 //    ADMIN_TOKEN  heslo pro admin přehled a export (VÝCHOZÍ "zmen-me" – ZMĚŇTE!)
 //    QR_SECRET    tajemství, ze kterého se počítají kódy v QR (VÝCHOZÍ "zmen-me-qr" – ZMĚŇTE!
 //                 a po vytištění QR kódů už neměňte, jinak přestanou platit)
@@ -17,11 +17,12 @@ import * as store from "./db.js";
 const { STATIONS, METRICS } = game;
 const BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PUBLIC = join(__dirname, "..", "public"); // stránky jsou o složku výš
 const app = express();
 // Na Azure běží server za proxy – bez tohohle by odkazy v QR začínaly http:// místo https://.
 app.set("trust proxy", true);
 app.use(express.json());
-app.use(express.static(join(__dirname, "public")));
+app.use(express.static(PUBLIC));
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "zmen-me";
@@ -287,7 +288,7 @@ app.get("/api/admin/export.csv", (req, res) => {
 });
 
 app.get("/admin", (_req, res) => {
-  res.sendFile(join(__dirname, "public", "admin.html"));
+  res.sendFile(join(PUBLIC, "admin.html"));
 });
 
 // Kontrola pro Azure (Health check) – odpoví, jen když funguje i databáze.
@@ -298,7 +299,7 @@ app.get("/api/health", (_req, res) => {
 
 // Obrazovka do cíle (žebříček na velkou obrazovku).
 app.get("/cil", (_req, res) => {
-  res.sendFile(join(__dirname, "public", "cil.html"));
+  res.sendFile(join(PUBLIC, "cil.html"));
 });
 
 app.listen(PORT, () => {

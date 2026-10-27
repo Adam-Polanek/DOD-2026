@@ -62,7 +62,7 @@ Hesla vygeneruješ v Terminálu příkazem `openssl rand -hex 16`.
 
 ## 4) Úprava otázek a stanovišť
 
-Všechen obsah je v jediném souboru **`questions.js`**. Design ani server se
+Všechen obsah je v jediném souboru **`server/questions.js`**. Design ani server se
 kvůli tomu měnit nemusí. Jedna odpověď vypadá takhle:
 
 ```js
@@ -84,7 +84,7 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 ## 5) Před akcí – kontrolní seznam
 
 - [ ] Na Azure nastavené `ADMIN_TOKEN` a `QR_SECRET` (admin stránka jinak varuje).
-- [ ] Finální texty ve `questions.js`, žádné `[NÁVRH]`.
+- [ ] Finální texty v `server/questions.js`, žádné `[NÁVRH]`.
 - [ ] QR kódy vytisknout **z ostré adresy** (`https://…azurewebsites.net/admin`
       → QR k tisku → Tisknout). Z `localhost` nefungují.
 - [ ] Projít celou trasu s mobily (iPhone i Android) a vytištěnými QR.
@@ -115,15 +115,16 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 ## Struktura projektu
 
 ```
-server.js          server a API, hlídá pořadí stanovišť
-game.js            pravidla: výpočet bodů (replay), trasa, skóre, QR kódy
-questions.js       obsah: příběhy, otázky, body, Kč
-db.js              databáze SQLite (ukládá jen volby hráčů)
-public/index.html  hra pro hráče
-public/admin.html  přehled pro organizátory + QR k tisku
-public/cil.html    žebříček do cíle
-navrh/             mockupy a podklady na schůzky
-dokumenty/         projektové řízení (zadání, plánování, charta, otázky od týmu)
+server/server.js     server a API, hlídá pořadí stanovišť
+server/game.js       pravidla: výpočet bodů (replay), trasa, skóre, QR kódy
+server/questions.js  obsah: příběhy, otázky, body, Kč
+server/db.js         databáze SQLite (ukládá jen volby hráčů)
+public/index.html    hra pro hráče
+public/admin.html    přehled pro organizátory + QR k tisku
+public/cil.html      žebříček do cíle
+data/                databáze (jen lokálně, není v gitu)
+navrh/               mockupy a podklady na schůzky
+dokumenty/           projektové řízení (zadání, plánování, charta, otázky od týmu)
 ```
 
 API (pro vývojáře): `GET /api/config`, `POST /api/register`, `GET /api/me/:code`,
