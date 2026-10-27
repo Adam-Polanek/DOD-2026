@@ -103,8 +103,9 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 ## 7) Po akci
 
 - Stáhnout finální export z `/admin`.
-- V Azure aplikaci **zastavit** (Stop) nebo smazat skupinu prostředků
-  `dod-2026`, ať zbytečně neplatí.
+- V Azure se platí za **plán**, ne za běžící aplikaci – pouhé zastavení (Stop)
+  placení **neukončí**. Plán přepnout na **Free F1** (Scale up), nebo smazat
+  celou skupinu prostředků `DOD-2026`.
 - Na další ročník: nový `QR_SECRET` = nové QR kódy, prázdná databáze.
 
 ## Bezpečnost a soukromí
