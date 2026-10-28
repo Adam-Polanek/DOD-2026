@@ -1,0 +1,23 @@
+.alert {
+  padding: 12px 15px;
+  border-radius: var(--radius);
+  border: 1.5px solid;
+  background: var(--card);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.error {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.info {
+  border-color: var(--ink);
+  border-style: dashed;
+}
+
+.ok {
+  border-color: var(--good);
+  color: var(--good);
+}

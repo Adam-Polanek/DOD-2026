@@ -1,0 +1,187 @@
+/* ---------------------------------------------------------------------------
+   Design tokeny – Figma board 8:518 „Směr A × VŠCHT – Laboratoř v oranžové“.
+   Barvy metrik nejsou tady: berou se z /api/config (server/questions.js).
+   --------------------------------------------------------------------------- */
+:root {
+  --red: #e64010;
+  --red-dark: #c4350c;
+  --salmon: #ef8364;
+  --bg: #fff4ef;
+  --board: #fbe4db;
+  --ink: #161412;
+  --muted: #5d4c46;
+  --muted-2: #8a817d;
+  --line: #f0d9cf;
+  --track: #f3e2dc;
+  --selected: #fde3d9;
+  --error: #c0271b;
+  --good: #1f7a45;
+  --card: #ffffff;
+
+  --radius: 8px;
+  --radius-sm: 6px;
+  --border: 1.5px solid var(--ink);
+  --shadow-red: 4px 4px 0 var(--red);
+  --shadow-ink: 4px 4px 0 var(--ink);
+  --gutter: 22px;
+
+  --font: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --mono: var(--font-plex-mono), ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100svh;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 34px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+h3 {
+  font-size: 20px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+/* ---- Pomocné třídy ------------------------------------------------------- */
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Popisek verzálkami v Plex Mono (např. „DALŠÍ ZASTÁVKA“). */
+.label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+.lead {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Textové pole ve stylu návrhu. */
+.input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px 15px;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-size: 16px;
+}
+
+.input::placeholder {
+  color: var(--muted-2);
+}
+
+textarea.input {
+  resize: vertical;
+  min-height: 84px;
+}
+
+.fade-in {
+  animation: fade-in 0.25s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

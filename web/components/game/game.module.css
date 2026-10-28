@@ -1,0 +1,273 @@
+.page {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100svh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px var(--gutter) 24px;
+}
+
+.actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px var(--gutter);
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  background: linear-gradient(to bottom, transparent, var(--bg) 18px);
+}
+
+.center {
+  text-align: center;
+  align-items: center;
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footnote {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted-2);
+  text-align: center;
+}
+
+/* Ruční zadání kódu: pole s tlačítkem OK uvnitř. */
+.manual {
+  display: flex;
+  align-items: center;
+  border: var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.manual input {
+  flex: 1;
+  min-width: 0;
+  padding: 15px;
+  border: 0;
+  background: transparent;
+  font-family: var(--mono);
+  font-size: 17px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.manual input:focus-visible {
+  outline: none;
+}
+
+.manual:focus-within {
+  outline: 3px solid var(--red);
+  outline-offset: 2px;
+}
+
+.manual button {
+  align-self: stretch;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.manual button:disabled {
+  color: var(--muted-2);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 17px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.cardInk {
+  border: var(--border);
+}
+
+.darkCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 17px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-red);
+}
+
+.darkCard b {
+  font-size: 19px;
+  color: var(--salmon);
+}
+
+.redCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 17px;
+  background: var(--red);
+  color: #fff;
+  border-radius: var(--radius);
+}
+
+.redCard b {
+  font-size: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+}
+
+.details summary::after {
+  content: "↓";
+  font-family: var(--mono);
+}
+
+.details[open] summary::after {
+  content: "↑";
+}
+
+.details[open] summary {
+  margin-bottom: 12px;
+}
+
+.linkBtn {
+  align-self: center;
+  padding: 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Mapa trasy */
+.route {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.route li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.route .num {
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.route .state {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+}
+
+.route .done .num {
+  background: var(--ink);
+  color: #fff;
+}
+
+.route .cur {
+  border: 1.5px solid var(--red);
+}
+
+.route .cur .num {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.route .cur .state {
+  color: var(--red);
+}
+
+.route .locked {
+  color: var(--muted);
+  background: transparent;
+  border-style: dashed;
+}
+
+/* Hodnocení hry v cíli */
+.scale {
+  display: flex;
+  gap: 6px;
+}
+
+.scale button {
+  flex: 1;
+  height: 46px;
+  border: var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scale button[aria-pressed="true"] {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.scaleWords button {
+  font-family: var(--font);
+  font-size: 15px;
+}

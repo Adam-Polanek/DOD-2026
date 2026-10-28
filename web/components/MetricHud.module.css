@@ -1,0 +1,70 @@
+.hud {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 9px 10px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.head {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row > :last-child {
+  flex: 1;
+}
+
+.value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 2ch;
+}
+
+.savings {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+.kc {
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .hud {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .savings {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: center;
+  }
+}

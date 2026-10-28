@@ -23,6 +23,7 @@ Potřebuješ **Node.js 22 nebo novější** (`node --version`).
 
 ```bash
 npm install     # jen poprvé
+npm run build   # sestaví frontend (Next.js) do web/out – poprvé a po každé změně ve web/
 npm start
 ```
 
@@ -32,10 +33,27 @@ Zastavení: `Ctrl + C`. Data se ukládají do `data/dod.sqlite`.
 
 Kódy stanovišť pro zkoušení najdeš v `/admin` → záložka **QR k tisku**.
 
+Když `web/out` neexistuje (frontend není sestavený), server použije původní
+stránky ze složky `public/`.
+
+### Vývoj frontendu (Next.js)
+
+Frontend je ve složce `web/` (Next.js, React, TypeScript). Při vývoji běží dva procesy:
+
+```bash
+npm start          # 1. terminál: server a API na http://localhost:3000
+npm run dev:web    # 2. terminál: frontend na http://localhost:3001 (změny vidíš hned)
+```
+
+Frontend na `:3001` posílá dotazy na `/api` serveru na `:3000`. Design tokeny
+(barvy, písma) jsou ve `web/app/globals.css`, komponenty ve `web/components/`.
+Návrh je ve Figmě (board „Směr A × VŠCHT – Laboratoř v oranžové“).
+
 ## 2) Nasazení na Azure App Service
 
 Kód je na GitHubu a Azure si ho po každém `git push` sám stáhne a nasadí
-(GitHub Actions, záložka **Actions** v repozitáři).
+(GitHub Actions, záložka **Actions** v repozitáři). GitHub Actions při tom
+sám spustí `npm run build`, takže sestavený frontend se do gitu nedává.
 
 Nastavení aplikace v Azure Portalu:
 
@@ -121,9 +139,10 @@ server/server.js     server a API, hlídá pořadí stanovišť
 server/game.js       pravidla: výpočet bodů (replay), trasa, skóre, QR kódy
 server/questions.js  obsah: příběhy, otázky, body, Kč
 server/db.js         databáze SQLite (ukládá jen volby hráčů)
-public/index.html    hra pro hráče
-public/admin.html    přehled pro organizátory + QR k tisku
-public/cil.html      žebříček do cíle
+web/                 frontend (Next.js): app/ stránky /, /cil, /admin; components/ části UI
+web/lib/             volání API (api.ts) a typy odpovědí serveru (types.ts)
+web/out/             sestavený frontend (vznikne po `npm run build`, není v gitu)
+public/              původní verze stránek (záloha, když web/out chybí)
 data/                databáze (jen lokálně, není v gitu)
 navrh/               mockupy a podklady na schůzky
 dokumenty/           projektové řízení (zadání, plánování, charta, otázky od týmu)

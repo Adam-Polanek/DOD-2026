@@ -1,0 +1,252 @@
+/* Navrženo na 1440 × 810, velikosti rostou se šířkou obrazovky (1em ≈ 16 px při 1440). */
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-size: clamp(12px, 1.11vw, 28px);
+  background: var(--bg);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2em;
+  padding: 2.25em 3.5em 2.25em;
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.header :global(.eyebrow) {
+  font-size: 0.8em;
+}
+
+.title {
+  margin-top: 0.3em;
+  font-size: 3.6em;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.stats {
+  display: flex;
+  gap: 3em;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat b {
+  font-family: var(--mono);
+  font-size: 2.6em;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  font-family: var(--mono);
+  font-size: 0.8em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+.main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 818fr) minmax(0, 470fr);
+  gap: 2.5em;
+  padding: 2.25em 3.5em;
+  align-items: start;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 3.75em 11.25em 1fr auto;
+  align-items: center;
+  min-height: 3.75em;
+  padding: 0 1.25em;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.top {
+  border: 2px solid var(--ink);
+  box-shadow: 0.25em 0.25em 0 var(--red);
+}
+
+.rank {
+  font-family: var(--mono);
+  font-size: 1.15em;
+}
+
+.name {
+  font-family: var(--mono);
+  font-size: 1.3em;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 1em;
+}
+
+.profile {
+  color: var(--muted-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  font-family: var(--mono);
+  font-size: 1.75em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.empty {
+  padding: 2em 0;
+  font-size: 1.4em;
+  color: var(--muted);
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25em;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding: 1.4em;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.cardTitle {
+  font-family: var(--mono);
+  font-size: 0.95em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cat {
+  display: grid;
+  grid-template-columns: 7em 1fr;
+  gap: 1em;
+  align-items: start;
+}
+
+.catName {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-top: 0.2em;
+}
+
+.dot {
+  width: 0.6em;
+  height: 0.6em;
+  border-radius: 50%;
+  flex: none;
+}
+
+.cat ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2em;
+}
+
+.cat li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1em;
+}
+
+.cat li span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat li b {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--muted-2);
+}
+
+.join {
+  flex-direction: row;
+  align-items: center;
+  gap: 1.4em;
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.join p {
+  margin-top: 0.5em;
+}
+
+.qr {
+  width: 8em;
+  height: 8em;
+  flex: none;
+  border-radius: var(--radius-sm);
+}
+
+.offline {
+  position: fixed;
+  right: 1em;
+  bottom: 0.8em;
+  font-family: var(--mono);
+  font-size: 0.8em;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .screen {
+    font-size: 14px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.5em var(--gutter);
+  }
+  .title {
+    font-size: 2.4em;
+  }
+  .main {
+    grid-template-columns: 1fr;
+    padding: 1.5em var(--gutter);
+  }
+  .row {
+    grid-template-columns: 2.5em 1fr auto;
+  }
+  .profile {
+    display: none;
+  }
+}
