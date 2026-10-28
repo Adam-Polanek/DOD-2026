@@ -79,19 +79,25 @@
   .sheet .kind{font-size:12px;font-weight:800;color:#fff;background:var(--red);padding:3px 10px;border-radius:999px}
 
   @media print{
-    @page{size:A4;margin:12mm}
+    /* Každé místo = přesně 1 stránka A4. Výška 240 mm nechává rezervu i pro
+       záhlaví a zápatí, které přidává Safari/Chrome. */
+    @page{size:A4;margin:10mm}
     html,body{background:#fff}
     header,.noprint{display:none!important}
     main{padding:0;max-width:none}
     .sheets{display:block}
-    .sheet{border:0;border-radius:0;height:270mm;justify-content:center;gap:6mm;break-after:page;page-break-after:always;padding:0}
+    .sheet{position:relative;border:0;border-radius:0;padding:0;height:240mm;overflow:hidden;
+      justify-content:center;gap:5mm;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always}
+    .sheet:last-child{break-after:auto;page-break-after:auto}
     .sheet .brand{position:absolute;top:0;left:0;right:0}
-    .sheet{position:relative}
-    .sheet .place{font-size:44pt}
-    .sheet .title{font-size:20pt}
-    .sheet .qr{max-width:140mm}
-    .sheet .code{font-size:40pt}
-    .sheet .how{font-size:14pt;max-width:150mm}
+    /* bez „tisku pozadí" by bílé logo na černé zmizelo */
+    .sheet .logo{background:none;color:#111;border:2px solid #111}
+    .sheet .kind{background:none;color:#111;border:2px solid #111}
+    .sheet .place{font-size:40pt}
+    .sheet .title{font-size:18pt}
+    .sheet .qr{max-width:125mm}
+    .sheet .code{font-size:36pt}
+    .sheet .how{font-size:13pt;max-width:150mm}
   }
 </style>
 </head>
