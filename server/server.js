@@ -269,6 +269,18 @@ app.get("/api/admin/qr", (req, res) => {
   });
 });
 
+// Smazání všech hráčů a výsledků (před akcí). Nejdřív se uloží záloha.
+// Pojistka: v těle musí přijít { confirm: "SMAZAT" }.
+app.post("/api/admin/reset", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  if (req.body?.confirm !== "SMAZAT") {
+    return res.status(400).json({ error: "Pro smazání je potřeba napsat SMAZAT." });
+  }
+  const { backup, count } = store.resetAll();
+  console.log(`Admin smazal data (${count} hráčů), záloha: ${backup}`);
+  res.json({ ok: true, deleted: count, backup: backup.split("/").pop() });
+});
+
 // Export do CSV (otevře se v Excelu).
 app.get("/api/admin/export.csv", (req, res) => {
   if (!requireAdmin(req, res)) return;

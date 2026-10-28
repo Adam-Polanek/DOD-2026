@@ -43,6 +43,11 @@
   .alert{border:2px solid var(--bad);background:#fff;color:var(--bad);border-radius:12px;padding:12px 14px;font-weight:700}
   .warn{border:2px dashed var(--red);background:var(--peach);border-radius:12px;padding:12px 14px}
 
+  .danger{border-color:var(--bad);box-shadow:4px 4px 0 var(--bad)}
+  .danger h2{color:var(--bad)}
+  .btn.danger-btn{background:var(--bad);border-color:var(--bad);box-shadow:3px 3px 0 #111}
+  .btn.danger-btn:hover{background:#8f1c13}
+  .ok{border:2px solid var(--good);background:#fff;color:var(--good);border-radius:12px;padding:12px 14px;font-weight:700}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   .stat .v{font-family:var(--mono);font-size:32px;font-weight:600;line-height:1}
   .stat .l{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
@@ -132,6 +137,17 @@
       <tbody id="rows"></tbody>
     </table></div>
   </div>
+  <div class="card danger noprint">
+    <h2 style="font-size:17px">Nebezpečná zóna</h2>
+    <p><b>Smazat všechny hráče, výsledky a statistiky</b> – např. po testování, těsně před akcí.
+      Server si předtím sám uloží zálohu databáze. QR kódy ani hesla se nemění.</p>
+    <p class="muted" style="font-size:13px">Tip: nejdřív si stáhni Excel (CSV), ať máš výsledky testů i u sebe.</p>
+    <div class="row">
+      <input id="resetConfirm" placeholder="Napiš SMAZAT" autocomplete="off" style="max-width:200px">
+      <button class="btn danger-btn" onclick="resetAll()">Smazat všechna data</button>
+    </div>
+    <div id="resetMsg"></div>
+  </div>
 </main>
 
 <main id="qr" hidden>
@@ -220,6 +236,30 @@ async function loadOverview() {
       <td>${time(r.created_at)}</td>
     </tr>`).join("") || `<tr><td colspan="12" class="muted">Zatím nikdo nehraje.</td></tr>`;
   $("updated").textContent = "aktualizováno " + new Date().toLocaleTimeString("cs-CZ");
+}
+
+// ---- Smazání všech dat -----------------------------------------------------
+async function resetAll() {
+  const msg = $("resetMsg");
+  if ($("resetConfirm").value.trim() !== "SMAZAT") {
+    msg.innerHTML = `<div class="alert">Pro potvrzení napiš do políčka velkými písmeny SMAZAT.</div>`;
+    return;
+  }
+  if (!confirm("Opravdu smazat VŠECHNY hráče a výsledky? Server předtím uloží zálohu.")) return;
+  try {
+    const r = await fetch("/api/admin/reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Admin-Token": TOKEN },
+      body: JSON.stringify({ confirm: "SMAZAT" }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Chyba serveru");
+    $("resetConfirm").value = "";
+    msg.innerHTML = `<div class="ok">Smazáno ${d.deleted} hráčů. Záloha na serveru: <span class="mono">${esc(d.backup)}</span></div>`;
+    loadOverview();
+  } catch (e) {
+    msg.innerHTML = `<div class="alert">${esc(e.message)}</div>`;
+  }
 }
 
 // ---- QR k tisku ------------------------------------------------------------

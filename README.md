@@ -88,8 +88,9 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 - [ ] QR kódy vytisknout **z ostré adresy** (`https://…azurewebsites.net/admin`
       → QR k tisku → Tisknout). Z `localhost` nefungují.
 - [ ] Projít celou trasu s mobily (iPhone i Android) a vytištěnými QR.
-- [ ] Smazat testovací hráče: v Azure smazat soubor `/home/data/dod.sqlite`
-      (Development Tools → SSH) a restartovat aplikaci.
+- [ ] Smazat testovací hráče: `/admin` → dole **Nebezpečná zóna** → napsat
+      `SMAZAT` → **Smazat všechna data**. Server si předtím sám uloží zálohu
+      do `/home/data/zalohy/`.
 
 ## 6) V den akce
 
@@ -130,4 +131,5 @@ dokumenty/           projektové řízení (zadání, plánování, charta, otá
 
 API (pro vývojáře): `GET /api/config`, `POST /api/register`, `GET /api/me/:code`,
 `POST /api/unlock`, `POST /api/answer`, `POST /api/feedback`, `GET /api/leaderboard`,
-`GET /api/health`, `GET /api/admin/leaderboard|qr|export.csv?token=…`.
+`GET /api/health`, `GET /api/admin/leaderboard|qr|export.csv?token=…`,
+`POST /api/admin/reset` (`{confirm: "SMAZAT"}`, záloha se uloží předem).

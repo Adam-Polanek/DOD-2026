@@ -127,4 +127,20 @@ export function saveFeedback(code, { rating, recommend, best, improve }) {
   stmtUpsertFeedback.run(code, rating ?? null, recommend ?? null, best ?? null, improve ?? null, nowIso());
 }
 
+// ---- Smazání všech dat (před akcí) ------------------------------------------
+// Nejdřív uloží zálohu celé databáze do složky zalohy/ vedle databáze,
+// pak smaže hráče, volby, odemčení i hodnocení. Vrací cestu k záloze.
+export function resetAll() {
+  const dir = join(dirname(DB_PATH), "zalohy");
+  mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backup = join(dir, `dod-pred-smazanim-${stamp}.sqlite`);
+  db.exec(`VACUUM INTO '${backup.replace(/'/g, "''")}'`);
+  const count = stmtAllParticipants.all().length;
+  db.exec(`BEGIN;
+    DELETE FROM choices; DELETE FROM unlocks; DELETE FROM feedback; DELETE FROM participants;
+    COMMIT;`);
+  return { backup, count };
+}
+
 export default db;
