@@ -29,6 +29,10 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
+      # Frontend je sestavený ve web/out – knihovny pro build Next.js na serveru nejsou potřeba.
+      - name: Remove frontend build dependencies
+        run: rm -rf web/node_modules web/.next
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:

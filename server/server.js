@@ -11,18 +11,23 @@
 import express from "express";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { existsSync } from "node:fs";
 import * as game from "./game.js";
 import * as store from "./db.js";
 
 const { STATIONS, METRICS } = game;
 const BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PUBLIC = join(__dirname, "..", "public"); // stránky jsou o složku výš
+// Stránky: nový frontend (Next.js, sestavený do web/out přes `npm run build`).
+// Když sestavený není, použije se původní verze ve složce public/.
+const WEB_OUT = join(__dirname, "..", "web", "out");
+const PUBLIC = existsSync(join(WEB_OUT, "index.html")) ? WEB_OUT : join(__dirname, "..", "public");
 const app = express();
 // Na Azure běží server za proxy – bez tohohle by odkazy v QR začínaly http:// místo https://.
 app.set("trust proxy", true);
 app.use(express.json());
-app.use(express.static(PUBLIC));
+// redirect: false – Next vedle cil.html vytvoří i složku cil/, ať /cil nepřesměruje na /cil/.
+app.use(express.static(PUBLIC, { redirect: false }));
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "zmen-me";

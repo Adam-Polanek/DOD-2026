@@ -1,0 +1,375 @@
+.page {
+  min-height: 100vh;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px var(--gutter);
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--ink);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brand h1 {
+  font-size: 28px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tabs button,
+.tabs a {
+  padding: 8px 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tabs [aria-pressed="true"] {
+  background: var(--ink);
+  color: #fff;
+}
+
+.main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px var(--gutter) 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.login {
+  max-width: 420px;
+  border: var(--border);
+  box-shadow: var(--shadow-red);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.toolbar h2 {
+  margin-right: auto;
+  font-size: 24px;
+}
+
+.stackGap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.warn {
+  padding: 12px 15px;
+  border: 1.5px dashed var(--red);
+  border-radius: var(--radius);
+  background: var(--selected);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.stat b {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.stat span {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fn {
+  display: grid;
+  grid-template-columns: 160px 1fr 40px;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.fn b {
+  text-align: right;
+}
+
+.track {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.track span {
+  display: block;
+  height: 100%;
+  background: var(--red);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.num {
+  font-family: var(--mono);
+  text-align: right !important;
+}
+
+.playing td {
+  color: var(--muted-2);
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.fin {
+  background: var(--ink);
+  color: #fff;
+}
+
+.danger {
+  border: 1.5px solid var(--error);
+}
+
+.danger h3 {
+  color: var(--error);
+}
+
+/* ---- QR k tisku ----------------------------------------------------------- */
+.sheets {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.sheet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  text-align: center;
+  background: var(--card);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+}
+
+.sheetBrand {
+  align-self: stretch;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.logo {
+  padding: 3px 8px;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.kind {
+  padding: 3px 10px;
+  border: 1.5px solid var(--red);
+  border-radius: 999px;
+  color: var(--red);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.place {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.placeTitle {
+  color: var(--muted);
+}
+
+.sheetQr {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+}
+
+.code {
+  padding: 4px 14px;
+  border: 1.5px dashed var(--ink);
+  border-radius: var(--radius-sm);
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+}
+
+.how {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media print {
+  /* Každé místo = přesně 1 stránka A4. Výška 240 mm nechává rezervu
+     i pro záhlaví a zápatí, které přidává prohlížeč. */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  :global(html),
+  :global(body),
+  .page,
+  .main {
+    background: #fff;
+    padding: 0;
+    max-width: none;
+  }
+  .header,
+  .noprint {
+    display: none !important;
+  }
+  .sheets {
+    display: block;
+  }
+  .sheet {
+    position: relative;
+    height: 240mm;
+    overflow: hidden;
+    justify-content: center;
+    gap: 5mm;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    break-inside: avoid;
+    break-after: page;
+  }
+  .sheet:last-child {
+    break-after: auto;
+  }
+  .sheetBrand {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+  .place {
+    font-size: 40pt;
+  }
+  .placeTitle {
+    font-size: 18pt;
+  }
+  .sheetQr {
+    max-width: 125mm;
+  }
+  .code {
+    font-size: 36pt;
+  }
+  .how {
+    font-size: 13pt;
+    max-width: 150mm;
+  }
+}
+
+@media (max-width: 600px) {
+  .fn {
+    grid-template-columns: 110px 1fr 32px;
+    font-size: 13px;
+  }
+}

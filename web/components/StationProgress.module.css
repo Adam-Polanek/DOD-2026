@@ -1,0 +1,35 @@
+.row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 4px;
+}
+
+.row li {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.todo {
+  background: var(--card);
+}
+
+.done {
+  background: var(--ink);
+  color: #fff;
+}
+
+.current {
+  background: var(--red);
+  border-color: var(--red) !important;
+  color: #fff;
+}

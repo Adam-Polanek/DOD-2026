@@ -5,7 +5,9 @@
   "type": "module",
   "main": "server/server.js",
   "scripts": {
-    "start": "node --experimental-sqlite server/server.js"
+    "start": "node --experimental-sqlite server/server.js",
+    "build": "npm --prefix web ci && npm --prefix web run build",
+    "dev:web": "npm --prefix web run dev"
   },
   "engines": {
     "node": ">=22.5.0"
