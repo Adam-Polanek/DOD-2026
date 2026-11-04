@@ -62,6 +62,7 @@ const stmtInsertParticipant = db.prepare(
 );
 const stmtGetParticipant = db.prepare("SELECT * FROM participants WHERE code = ?");
 const stmtAllParticipants = db.prepare("SELECT * FROM participants ORDER BY created_at");
+const stmtSetNickname = db.prepare("UPDATE participants SET nickname = ? WHERE code = ?");
 const stmtFinish = db.prepare(
   "UPDATE participants SET finished_at = COALESCE(finished_at, ?) WHERE code = ?"
 );
@@ -75,6 +76,10 @@ export function getParticipant(code) {
 }
 export function allParticipants() {
   return stmtAllParticipants.all();
+}
+// Přezdívka null = v žebříčku se ukáže jen kód (admin tak skryje nevhodnou přezdívku).
+export function setNickname(code, nickname) {
+  return stmtSetNickname.run(nickname, code).changes > 0;
 }
 export function finishParticipant(code) {
   stmtFinish.run(nowIso(), code);

@@ -45,4 +45,6 @@ export const adminBoard = (token: string) =>
 export const adminQr = (token: string) => request<QrCodes>("/api/admin/qr", { headers: adminHeaders(token) });
 export const adminReset = (token: string) =>
   post<{ ok: true; deleted: number; backup: string }>("/api/admin/reset", { confirm: "SMAZAT" }, adminHeaders(token));
+export const adminHideNickname = (token: string, code: string) =>
+  post<{ ok: true }>("/api/admin/hide-nickname", { code }, adminHeaders(token));
 export const adminExportUrl = (token: string) => "/api/admin/export.csv?token=" + encodeURIComponent(token);

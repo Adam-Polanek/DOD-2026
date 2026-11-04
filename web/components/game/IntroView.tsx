@@ -20,6 +20,8 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
   onRestore: (code: string) => void;
 }) {
   const [nick, setNick] = useState("");
+  // Přezdívka je povinná (pravidla a filtr sprostých slov hlídá server, tady jen délka).
+  const nickOk = nick.trim().length >= 3;
   const [code, setCode] = useState("");
 
   // Hráč naskenoval QR v prohlížeči, který ho nezná – nejdřív nabídnout obnovení.
@@ -39,8 +41,8 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
       top={{ left: "VŠCHT · DOD 2026", right: "Holešovice" }}
       actions={
         <>
-          <Button arrow="→" disabled={busy} onClick={() => onStart(nick)}>
-            {pendingQr ? "Ne, začínám novou hru" : "Začít experiment"}
+          <Button arrow="→" disabled={busy || !nickOk} onClick={() => onStart(nick)}>
+            {!nickOk ? "Nejdřív si napiš přezdívku" : pendingQr ? "Ne, začínám novou hru" : "Začít experiment"}
           </Button>
           <p className={styles.footnote}>Bez registrace · žádné osobní údaje</p>
         </>
@@ -65,11 +67,15 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
       {pendingQr && restore}
 
       <div className={styles.field}>
-        <label htmlFor="nick" className="label">Přezdívka do žebříčku · nepovinné</label>
+        <label htmlFor="nick" className="label">Přezdívka do žebříčku</label>
         <input
-          id="nick" className="input" maxLength={40} autoComplete="off" placeholder="např. Chemik007"
-          value={nick} onChange={(e) => setNick(e.target.value)}
+          id="nick" className="input" maxLength={16} autoComplete="off" placeholder="např. Chemik007" required
+          aria-describedby="nick-help" value={nick} onChange={(e) => setNick(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && nickOk && !busy) onStart(nick); }}
         />
+        <p id="nick-help" className={styles.footnote} style={{ textAlign: "left" }}>
+          3–16 znaků. Uvidí ji všichni na obrazovce v cíli – ne celé jméno, nic sprostého.
+        </p>
       </div>
 
       <CodeCard label="Tvůj anonymní kód" value={<span className="muted">DOD-····</span>} aside="~25 min" />

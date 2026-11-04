@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { adminBoard, adminExportUrl, adminReset } from "@/lib/api";
+import { adminBoard, adminExportUrl, adminHideNickname, adminReset } from "@/lib/api";
 import type { AdminBoard } from "@/lib/types";
 import { fmtNum, time } from "@/lib/format";
 import { Alert } from "../Alert";
@@ -40,6 +40,16 @@ export function Overview({ token, initial }: { token: string; initial: AdminBoar
   const n = d.stations.length;
   const reached = Array.from({ length: n + 1 }, (_, k) => d.board.filter((r) => r.stationsDone >= k).length);
   const max = Math.max(1, reached[0]);
+
+  async function hideNickname(code: string, nickname: string) {
+    if (!confirm(`Skrýt přezdívku „${nickname}“? V žebříčku se pak ukáže jen kód ${code}.`)) return;
+    try {
+      await adminHideNickname(token, code);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Chyba serveru");
+    }
+  }
 
   let rank = 0;
   return (
@@ -109,7 +119,16 @@ export function Overview({ token, initial }: { token: string; initial: AdminBoar
                 <tr key={r.code} className={r.finished_at ? "" : styles.playing}>
                   <td className={styles.num}>{r.finished_at ? ++rank : ""}</td>
                   <td className="mono">{r.code}</td>
-                  <td>{r.nickname}</td>
+                  <td>
+                    {r.nickname && (
+                      <>
+                        {r.nickname}{" "}
+                        <button type="button" className={styles.linkBtn} onClick={() => hideNickname(r.code, r.nickname!)}>
+                          skrýt
+                        </button>
+                      </>
+                    )}
+                  </td>
                   <td className={styles.num}><b>{r.score}</b></td>
                   <td className={styles.num}>{fmtNum(r.kc)}</td>
                   <td className={styles.num}>{r.metrics.f}</td>

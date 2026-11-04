@@ -373,3 +373,16 @@
     font-size: 13px;
   }
 }
+
+/* Malé textové tlačítko v tabulce (např. „skrýt“ u přezdívky). */
+.linkBtn {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--error);
+  font-family: var(--mono);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}

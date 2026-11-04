@@ -21,6 +21,7 @@ export interface Config {
   startKc: number;
   routeLength: number;
   bands: { min: number; t: string }[];
+  publicUrl: string | null; // PUBLIC_URL ze serveru (např. https://dodvscht.me)
 }
 
 export interface StationOption {
@@ -130,6 +131,7 @@ export interface AdminBoard {
 // GET /api/admin/qr
 export interface QrCodes {
   base: string;
+  publicUrl: boolean;
   defaultSecret: boolean;
   codes: { id: string; place: string; title: string; kind: "arrive" | "task"; token: string; url: string }[];
 }

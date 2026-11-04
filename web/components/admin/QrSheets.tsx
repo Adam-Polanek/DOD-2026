@@ -30,6 +30,16 @@ export function QrSheets({ token }: { token: string }) {
           <h2>QR kódy k tisku</h2>
           <Button small onClick={() => window.print()}>Tisknout (A4, 1 stanoviště na stránku)</Button>
         </div>
+        <p>
+          QR vedou na <b className="mono">{d.base}</b>
+        </p>
+        {!d.publicUrl && !local && (
+          <div className={styles.warn}>
+            Adresa v QR se vzala z prohlížeče, protože na serveru není nastavená proměnná{" "}
+            <span className="mono">PUBLIC_URL</span>. <b>Před tiskem ji nastav v Azure na https://dodvscht.me</b>{" "}
+            – jinak QR povedou tam, odkud máš admin zrovna otevřený.
+          </div>
+        )}
         {local && (
           <div className={styles.warn}>
             QR teď vedou na <span className="mono">{d.base}</span>, což mobily venku neotevřou.{" "}

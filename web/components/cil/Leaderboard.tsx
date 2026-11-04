@@ -25,7 +25,7 @@ export function Leaderboard() {
         if (!alive) return;
         setConfig(c);
         setData(d);
-        setJoinUrl(location.origin + "/");
+        setJoinUrl((c.publicUrl || location.origin) + "/");
         setOffline(false);
       } catch {
         if (alive) setOffline(true);

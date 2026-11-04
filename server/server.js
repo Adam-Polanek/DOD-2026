@@ -14,6 +14,7 @@ import { dirname, join } from "node:path";
 import { existsSync } from "node:fs";
 import * as game from "./game.js";
 import * as store from "./db.js";
+import { checkNickname, nicknameKey } from "./nickname.js";
 
 const { STATIONS, METRICS } = game;
 const BY_ID = Object.fromEntries(STATIONS.map((s) => [s.id, s]));
@@ -31,6 +32,9 @@ app.use(express.static(PUBLIC, { redirect: false }));
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || "zmen-me";
+// Veřejná adresa hry (např. https://dodvscht.me). Podle ní se dělají odkazy v QR k tisku,
+// takže nezáleží na tom, z jaké adresy se admin otevře.
+const PUBLIC_URL = (process.env.PUBLIC_URL || "").trim().replace(/\/+$/, "");
 const DEFAULT_SECRETS = { admin: !process.env.ADMIN_TOKEN, qr: !process.env.QR_SECRET };
 
 // --- Generování unikátního kódu účastníka: DOD-XXXX -------------------------
@@ -136,12 +140,17 @@ function finalResult(code) {
 
 // Přehled míst + metriky a pravidla (bez otázek – ty závisí na trase hráče).
 app.get("/api/config", (_req, res) => {
-  res.json({ stations: game.publicStations(), ...game.publicRules() });
+  res.json({ stations: game.publicStations(), ...game.publicRules(), publicUrl: PUBLIC_URL || null });
 });
 
 // Registrace nového hráče → přidělí kód.
 app.post("/api/register", (req, res) => {
-  const nickname = (req.body?.nickname || "").toString().trim().slice(0, 40) || null;
+  const { nickname, error } = checkNickname(req.body?.nickname);
+  if (error) return res.status(400).json({ error });
+  const key = nicknameKey(nickname);
+  if (store.allParticipants().some((p) => p.nickname && nicknameKey(p.nickname) === key)) {
+    return res.status(409).json({ error: "Tuhle přezdívku už někdo má. Přidej třeba číslo nebo zkus jinou." });
+  }
   const code = makeUniqueCode();
   const p = store.createParticipant(code, nickname);
   res.json(progress(p));
@@ -266,9 +275,10 @@ app.get("/api/admin/leaderboard", (req, res) => {
 // Kódy do QR pro tisk. URL vede na hru, která stanoviště sama odemkne.
 app.get("/api/admin/qr", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const base = `${req.protocol}://${req.get("host")}`;
+  const base = PUBLIC_URL || `${req.protocol}://${req.get("host")}`;
   res.json({
     base,
+    publicUrl: !!PUBLIC_URL, // false = adresa se vzala z prohlížeče, PUBLIC_URL není nastavená
     defaultSecret: DEFAULT_SECRETS.qr, // true = QR_SECRET není nastavený, kódy se po nasazení změní
     codes: game.allTokens().map((t) => ({ ...t, url: `${base}/?qr=${t.token}` })),
   });
@@ -284,6 +294,15 @@ app.post("/api/admin/reset", (req, res) => {
   const { backup, count } = store.resetAll();
   console.log(`Admin smazal data (${count} hráčů), záloha: ${backup}`);
   res.json({ ok: true, deleted: count, backup: backup.split("/").pop() });
+});
+
+// Skrytí nevhodné přezdívky – v žebříčku se pak ukáže jen kód hráče.
+app.post("/api/admin/hide-nickname", (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const code = (req.body?.code || "").toString().toUpperCase();
+  if (!store.setNickname(code, null)) return res.status(404).json({ error: "Hráč s tímhle kódem neexistuje." });
+  console.log(`Admin skryl přezdívku hráče ${code}`);
+  res.json({ ok: true });
 });
 
 // Export do CSV (otevře se v Excelu).

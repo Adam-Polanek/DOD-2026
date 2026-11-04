@@ -60,7 +60,7 @@ Nastavení aplikace v Azure Portalu:
 | Kde | Co |
 |---|---|
 | Vytvoření Web App | Publish **Code**, **Node 22 LTS**, **Linux**, plán **Basic B1** (Free má denní limit a v den akce by se mohl zastavit) |
-| Settings → Environment variables | `ADMIN_TOKEN`, `QR_SECRET`, `DB_PATH=/home/data/dod.sqlite` |
+| Settings → Environment variables | `ADMIN_TOKEN`, `QR_SECRET`, `DB_PATH=/home/data/dod.sqlite`, `PUBLIC_URL=https://dodvscht.me` |
 | Settings → Configuration → General | **Always on: On** |
 | Monitoring → Health check | cesta `/api/health` |
 | Scale out | **1 instance** (databáze SQLite neunese víc serverů najednou) |
@@ -74,6 +74,7 @@ Hesla vygeneruješ v Terminálu příkazem `openssl rand -hex 16`.
 | `ADMIN_TOKEN` | heslo do `/admin` a exportu | `zmen-me` – **změnit!** |
 | `QR_SECRET` | z něj se počítají kódy v QR | `zmen-me-qr` – **změnit před tiskem QR a pak už nikdy** |
 | `DB_PATH` | kde leží databáze | `./data/dod.sqlite` |
+| `PUBLIC_URL` | veřejná adresa hry – podle ní se dělají odkazy v QR k tisku a QR v cíli | (prázdné = adresa z prohlížeče) |
 | `PORT` | port serveru | `3000` (Azure nastaví sám) |
 
 ⚠ Když se `QR_SECRET` změní, všechny vytištěné QR kódy přestanou platit.
@@ -101,7 +102,7 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 
 ## 5) Před akcí – kontrolní seznam
 
-- [ ] Na Azure nastavené `ADMIN_TOKEN` a `QR_SECRET` (admin stránka jinak varuje).
+- [ ] Na Azure nastavené `ADMIN_TOKEN`, `QR_SECRET` a `PUBLIC_URL=https://dodvscht.me` (admin stránka jinak varuje).
 - [ ] Finální texty v `server/questions.js`, žádné `[NÁVRH]`.
 - [ ] QR kódy vytisknout **z ostré adresy** (`https://…azurewebsites.net/admin`
       → QR k tisku → Tisknout). Z `localhost` nefungují.
