@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { adminBoard, adminExportUrl, adminHideNickname, adminReset } from "@/lib/api";
 import type { AdminBoard } from "@/lib/types";
-import { fmtNum, time } from "@/lib/format";
+import { time } from "@/lib/format";
 import { Alert } from "../Alert";
 import { Button, ButtonLink } from "../Button";
 import styles from "./Admin.module.css";
@@ -107,7 +107,7 @@ export function Overview({ token, initial }: { token: string; initial: AdminBoar
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>#</th><th>Kód</th><th>Přezdívka</th><th>Skóre</th><th>Kč</th><th>Fin.</th><th>Vzd.</th>
+                <th>#</th><th>Kód</th><th>Přezdívka</th><th>Skóre</th><th>Fin.</th><th>Vzd.</th>
                 <th>Pož.</th><th>Profil</th><th>Skupina</th><th>Stav</th><th>Začal</th>
               </tr>
             </thead>
@@ -130,7 +130,6 @@ export function Overview({ token, initial }: { token: string; initial: AdminBoar
                     )}
                   </td>
                   <td className={styles.num}><b>{r.score}</b></td>
-                  <td className={styles.num}>{fmtNum(r.kc)}</td>
                   <td className={styles.num}>{r.metrics.f}</td>
                   <td className={styles.num}>{r.metrics.v}</td>
                   <td className={styles.num}>{r.metrics.p}</td>

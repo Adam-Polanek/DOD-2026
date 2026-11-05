@@ -63,32 +63,34 @@ function requireParticipant(req, res) {
 }
 
 // ---------------------------------------------------------------------------
-//  Postup hráče: kde je, co má odemčené, metriky a Kč.
-//  Stanoviště jdou povinně popořadě podle trasy hráče (ta se po stanovišti 5
+//  Postup hráče: kde je, co má odemčené a metriky.
+//  Stanoviště jdou povinně popořadě podle trasy hráče (ta se po Erasmu
 //  rozdělí na Erasmus / doma). Aktuální je první stanoviště bez volby.
+//  Po odpovědi na posledním stanovišti (DOX) je hra u konce.
 // ---------------------------------------------------------------------------
 function progress(p) {
   const S = game.replay(store.getChoices(p.code));
   const unlocks = store.getUnlocks(p.code);
-  const st = BY_ID[S.route[S.pos]];
-  const arrived = unlocks.has(`${st.id}:arrive`);
-  const taskDone = !st.task || unlocks.has(`${st.id}:task`);
+  const done = S.pos >= S.route.length;
+  const idx = Math.min(S.pos, S.route.length - 1); // po konci zůstane poslední stanoviště
+  const st = BY_ID[S.route[idx]];
+  const arrived = done || unlocks.has(`${st.id}:arrive`);
+  const taskDone = done || !st.task || unlocks.has(`${st.id}:task`);
   return {
     code: p.code,
-    current: S.pos,                  // index aktuálního stanoviště v trase (0 = první)
+    current: S.pos,                  // index aktuálního stanoviště v trase (0 = první, délka trasy = hotovo)
     stationId: st.id,
     arrived,                         // naskenoval QR na místě?
     taskDone,                        // splnil úkol s obsluhou (jen u task stanovišť)?
     finished: !!p.finished_at,
     metrics: S.m,                    // { f, v, p } – finance, vzdělání, požitky
-    kc: S.kc,
     group: S.group,                  // null / "erasmus" / "doma"
     route: S.route.map((id) => ({ id, place: BY_ID[id].place })),
     // Dokud hráč nenaskenuje QR, vidí jen kam má jít, ne otázku.
     station: arrived
-      ? game.publicStation(st, S.pos + 1, S)
-      : { id: st.id, num: S.pos + 1, place: st.place, title: st.title },
-    result: arrived && st.final ? finalResult(p.code) : null,
+      ? game.publicStation(st, idx + 1, S)
+      : { id: st.id, num: idx + 1, place: st.place, title: st.title },
+    result: p.finished_at ? finalResult(p.code) : null,
   };
 }
 
@@ -99,16 +101,16 @@ function scoreRow(p) {
   const profile = game.profileFor(norm);
   return {
     code: p.code, nickname: p.nickname, created_at: p.created_at, finished_at: p.finished_at,
-    stationsDone: S.pos + (p.finished_at ? 1 : 0),
-    group: S.group, metrics: S.m, kc: Math.round(S.kc), score,
+    stationsDone: S.pos,
+    group: S.group, metrics: S.m, score,
     profile: profile.main, profileName: game.profileName(profile),
   };
 }
 
-// Dokončení hráči seřazení podle skóre (při shodě víc Kč vyhrává).
+// Dokončení hráči seřazení podle skóre (při shodě vyhrává, kdo doběhl dřív).
 function finishedRanking() {
   return store.allParticipants().filter((p) => p.finished_at).map(scoreRow)
-    .sort((a, b) => (b.score - a.score) || (b.kc - a.kc));
+    .sort((a, b) => (b.score - a.score) || a.finished_at.localeCompare(b.finished_at));
 }
 
 // Pořadí v jedné metrice (nejlepší ve financích / vzdělání / požitcích).
@@ -123,14 +125,18 @@ function finalResult(code) {
   const band = game.bandFor(me.score);
   const categories = {};
   for (const k of Object.keys(METRICS)) {
-    categories[k] = { value: me.metrics[k], rank: categoryRanking(rows, k).findIndex((r) => r.code === code) + 1 };
+    categories[k] = {
+      value: me.metrics[k],
+      rank: categoryRanking(rows, k).findIndex((r) => r.code === code) + 1,
+      text: game.evalFor(k, me.metrics[k]),     // text z Vyhodnocení podle bodů
+    };
   }
   return {
-    score: me.score, kc: me.kc, metrics: me.metrics,
+    score: me.score, metrics: me.metrics,
     rank: rows.indexOf(me) + 1, of: rows.length,
-    categories,                                  // { f: { value, rank }, v: …, p: … }
+    categories,                                  // { f: { value, rank, text }, v: …, p: … }
     band: { t: band.t, d: band.d },
-    profile: { id: me.profile, name: me.profileName, text: METRICS[me.profile].text },
+    profile: { id: me.profile, name: me.profileName },
   };
 }
 
@@ -185,34 +191,44 @@ app.post("/api/unlock", (req, res) => {
     return res.status(409).json({ error: "Nejdřív naskenuj QR kód, který visí na stanovišti." });
   }
   store.addUnlock(p.code, found.station.id, found.kind);
-  if (found.station.final) store.finishParticipant(p.code);
   res.json(progress(store.getParticipant(p.code)));
 });
 
 // Odpověď na otázku → server ji vyhodnotí a uloží.
+//   { code, station, choice }  u otázek A/B/C
+//   { code, station, value }   u otevřené otázky (napsané číslo)
 app.post("/api/answer", (req, res) => {
   const p = requireParticipant(req, res);
   if (!p) return;
   const now = progress(p);
   const st = BY_ID[now.stationId];
-  const choice = Number(req.body?.choice);
 
+  if (now.finished) return res.status(409).json({ error: "Hru už máš dohranou.", ...now });
   if (req.body?.station !== st.id) {
     return res.status(409).json({ error: `Teď odpovídáš na stanovišti ${now.current + 1}: ${st.place}.`, ...now });
   }
-  if (st.final) return res.status(409).json({ error: "Na posledním stanovišti se už neodpovídá." });
   if (!now.arrived) return res.status(409).json({ error: "Nejdřív naskenuj QR kód na stanovišti." });
   if (!now.taskDone) return res.status(409).json({ error: "Nejdřív splň úkol a nech si od obsluhy naskenovat QR kód." });
   const S = game.replay(store.getChoices(p.code));
-  if (!game.choiceAllowed(st, choice, S)) {
-    return res.status(400).json({ error: "Tuhle možnost teď nemůžeš zvolit." });
+  const input = game.stationContent(st, S.group)?.input;
+  let choice, value = null;
+  if (input) {
+    value = game.parseNumber(req.body?.value);
+    if (value === null) return res.status(400).json({ error: "Napiš výsledek jako číslo, např. 10500." });
+    choice = game.rangeIndex(input, value);
+  } else {
+    choice = Number(req.body?.choice);
+    if (!game.choiceAllowed(st, choice, S)) {
+      return res.status(400).json({ error: "Tuhle možnost teď nemůžeš zvolit." });
+    }
   }
 
-  store.addChoice(p.code, st.id, choice, null);
+  store.addChoice(p.code, st.id, choice, value);
   // Výsledek se počítá z uložených dat (při dvojkliku platí první volba).
   const after = game.replay(store.getChoices(p.code));
-  const last = after.last.stationId === st.id ? after.last : null;
-  res.json({ ...progress(p), answer: last });
+  if (after.pos >= after.route.length) store.finishParticipant(p.code);
+  const last = after.last?.stationId === st.id ? after.last : null;
+  res.json({ ...progress(store.getParticipant(p.code)), answer: last });
 });
 
 // Zpětná vazba.
@@ -232,7 +248,7 @@ app.post("/api/feedback", (req, res) => {
 // Veřejný žebříček: TOP 20 celkově + TOP 3 v každé metrice (pro obrazovku v cíli).
 app.get("/api/leaderboard", (_req, res) => {
   const rows = finishedRanking();
-  const pub = (r, i) => ({ rank: i + 1, name: r.nickname || r.code, score: r.score, kc: r.kc,
+  const pub = (r, i) => ({ rank: i + 1, name: r.nickname || r.code, score: r.score,
     metrics: r.metrics, profile: r.profileName });
   const categories = {};
   for (const k of Object.keys(METRICS)) categories[k] = categoryRanking(rows, k).slice(0, 3).map(pub);
@@ -308,12 +324,12 @@ app.post("/api/admin/hide-nickname", (req, res) => {
 // Export do CSV (otevře se v Excelu).
 app.get("/api/admin/export.csv", (req, res) => {
   if (!requireAdmin(req, res)) return;
-  const head = ["poradi", "kod", "prezdivka", "skore", "kc", "finance", "vzdelani", "pozitky",
+  const head = ["poradi", "kod", "prezdivka", "skore", "finance", "vzdelani", "pozitky",
     "profil", "skupina", "stanovist", "start", "dokonceno"];
   const csv = [head.join(";")];
   allResults().forEach((r, i) => {
     csv.push([
-      r.finished_at ? i + 1 : "", r.code, (r.nickname || "").replace(/;/g, ","), r.score, r.kc,
+      r.finished_at ? i + 1 : "", r.code, (r.nickname || "").replace(/;/g, ","), r.score,
       r.metrics.f, r.metrics.v, r.metrics.p, r.profileName, r.group ?? "", r.stationsDone,
       r.created_at, r.finished_at || "",
     ].join(";"));

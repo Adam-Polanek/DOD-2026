@@ -2,9 +2,10 @@
 
 Mobilní webová hra pro terénní část DOD VŠCHT (Praha-Holešovice, Jankovcova).
 Uchazeč projde 10 stanovišť, na každém naskenuje QR kód, přečte kus příběhu
-ze studia a rozhodne se (a/b/c). Každá volba mění tři oblasti – **finance,
-vzdělání, požitky** – a úspory v Kč. Podle bodů se trasa v půlce rozdělí
-(Erasmus / doma). V cíli hráč uvidí své **Životní skóre 0–100**, profil
+ze studia a rozhodne se (a/b/c, v Bance spočítá úspory). Každá volba mění tři
+oblasti – **finance, vzdělání, požitky** (každá začíná na 10 bodech). Na Erasmus
+pustí výběrko jen hráče s dost body vzdělání, pak se trasa rozdělí (Erasmus / doma).
+V cíli hráč uvidí své **Životní skóre 0–100**, vyhodnocení každé oblasti, profil
 a pořadí mezi ostatními.
 
 - **Hra pro hráče:** `/` – běží v mobilu, bez instalace a bez osobních údajů
@@ -86,16 +87,17 @@ kvůli tomu měnit nemusí. Jedna odpověď vypadá takhle:
 
 ```js
 { t: "Kolej – 5 000 Kč měsíčně za dvoulůžkový pokoj…",   // text odpovědi
-  fx: { f: 1, v: 0, p: 1 },   // body: f finance, v vzdělání, p požitky
-  kc: -5000,                  // změna úspor v Kč
+  fx: { f: 1, v: 1, p: 1 },   // body: f finance, v vzdělání, p požitky
   r: "Rychle si najdeš kamarády…",   // co se stalo (ukáže se po odpovědi)
-  needs: { kc: 10000 },       // nepovinné: podmínka, jinak je možnost zamčená
+  needs: { v: 12 },           // nepovinné: podmínka, jinak je možnost zamčená
 },
 ```
 
 - Stanoviště s jiným textem pro skupinu Erasmus a doma má `variants: { erasmus: {…}, doma: {…} }`.
-- O tom, kdo jede na Erasmus, rozhoduje funkce `chooseGroup()` (dole v souboru).
-- Texty označené `[NÁVRH]` jsou zástupné a mají se nahradit finálními.
+- Otevřená otázka (hráč píše číslo) má místo `opts` pole `input` s rozsahy – viz Banka.
+- Na Erasmus hráče pustí `ERASMUS_MIN_V` bodů vzdělání; trasu určí jeho volba na Přístavu (`switchTo`).
+- Texty vyhodnocení (podle bodů v každé oblasti) jsou v `METRICS` u každé metriky (`eval`).
+- ID stanovišť (`s1`–`s10`) **neměnit** – podle nich jsou vytištěné QR. Pořadí trasy je v `ROUTES`.
 
 Po úpravě: vyzkoušet lokálně (`npm start`), pak `git commit` a `git push`.
 Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejich volby.
@@ -138,7 +140,7 @@ Výsledky hráčů se přepočítají samy, v databázi jsou uložené jen jejic
 ```
 server/server.js     server a API, hlídá pořadí stanovišť
 server/game.js       pravidla: výpočet bodů (replay), trasa, skóre, QR kódy
-server/questions.js  obsah: příběhy, otázky, body, Kč
+server/questions.js  obsah: příběhy, otázky, body, vyhodnocení
 server/db.js         databáze SQLite (ukládá jen volby hráčů)
 web/                 frontend (Next.js): app/ stránky /, /cil, /admin; components/ části UI
 web/lib/             volání API (api.ts) a typy odpovědí serveru (types.ts)

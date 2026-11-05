@@ -1,13 +1,12 @@
 import type { Answer, Config, Progress, PublicStation } from "@/lib/types";
-import { fmtKc, letter, pad2 } from "@/lib/format";
+import { letter, pad2 } from "@/lib/format";
 import { Alert } from "../Alert";
 import { Button } from "../Button";
-import { CodeCard } from "../CodeCard";
 import { DeltaGrid } from "../DeltaGrid";
 import { Screen } from "./Screen";
 import styles from "./game.module.css";
 
-// 04 · Výsledek volby – co se stalo, změny metrik a zůstatek.
+// 04 · Výsledek volby – co se stalo a změny metrik.
 export function ResultView({ st, station, answer, config, onContinue }: {
   st: Progress;
   station: PublicStation;
@@ -25,21 +24,20 @@ export function ResultView({ st, station, answer, config, onContinue }: {
         <>
           {next && <span className="label">Další: {nextNum} · {next.place}</span>}
           <Button arrow="→" onClick={onContinue}>
-            {st.current === total - 1 ? "Pokračovat do cíle" : `Pokračovat na stanoviště ${nextNum}`}
+            {next ? `Pokračovat na stanoviště ${nextNum}` : "Zobrazit vyhodnocení"}
           </Button>
         </>
       }
     >
       <div className={styles.titleBlock}>
-        <span className="eyebrow">Zvolil/a jsi {letter(answer.choice)}</span>
+        <span className="eyebrow">{answer.quiz ? "Výpočet" : `Zvolil/a jsi ${letter(answer.choice)}`}</span>
         <h3>{answer.choiceText}</h3>
         {answer.result && <p className="lead">{answer.result}</p>}
       </div>
       {answer.correct !== null && (
         <Alert kind={answer.correct ? "ok" : "error"}>{answer.correct ? "Správně!" : "Tohle není správně."}</Alert>
       )}
-      <DeltaGrid fx={answer.fx} kc={answer.kc} config={config} />
-      <CodeCard inline label="Zůstatek" value={fmtKc(st.kc)} />
+      <DeltaGrid fx={answer.fx} config={config} />
     </Screen>
   );
 }

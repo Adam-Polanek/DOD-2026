@@ -1,14 +1,15 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .tile {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 15px;
+  min-width: 0;
+  padding: 13px 12px;
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -17,9 +18,11 @@
 /* Text v barvě metriky trochu ztmavený, ať je čitelný i žlutý na bílé. */
 .label {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--c, var(--ink)) 82%, #000);
 }
@@ -31,16 +34,6 @@
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
-}
-
-.dark {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
-}
-
-.dark .label {
-  color: #fff;
 }
 
 @media (max-width: 360px) {

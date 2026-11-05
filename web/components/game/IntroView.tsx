@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { Config } from "@/lib/types";
 import { METRIC_KEYS } from "@/lib/types";
-import { fmtKc } from "@/lib/format";
 import { Alert } from "../Alert";
 import { Button } from "../Button";
 import { Chip } from "../Chip";
@@ -48,13 +47,13 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
         </>
       }
     >
-      <ElementTile number={config.routeLength} corner="Kč" symbol="St" name="Studium" note={fmtKc(config.startKc)} />
+      <ElementTile number={config.routeLength} corner="f·v·p" symbol="St" name="Studium" note={`start ${config.startMetric} bodů`} />
       <div className={styles.titleBlock}>
         <h1>Studium na VŠCHT jako experiment</h1>
         <p className="lead">
           Projdi {config.routeLength} stanovišť, na každém naskenuj QR kód a rozhodni se. Uvidíš, jak tvoje volby
-          promění finance, vzdělání i zážitky. Některé možnosti si musíš umět dovolit a podle bodů se trasa
-          v půlce rozdělí: Erasmus, nebo doma.
+          promění finance, vzdělání i požitky. Některé možnosti si musíš zasloužit a v půlce se trasa
+          rozdělí: Erasmus, nebo doma.
         </p>
       </div>
       <div className={styles.chips}>

@@ -1,7 +1,7 @@
 "use client";
 
 // ---------------------------------------------------------------------------
-//  Hra pro hráče. Všechno důležité (body, Kč, trasa, pořadí) počítá server –
+//  Hra pro hráče. Všechno důležité (body, trasa, pořadí) počítá server –
 //  tady se jen podle stavu z API vybírá, kterou obrazovku ukázat.
 // ---------------------------------------------------------------------------
 import { useEffect, useRef, useState } from "react";
@@ -141,12 +141,12 @@ export function Game() {
     }
   }
 
-  async function sendAnswer(choice: number) {
+  async function sendAnswer(a: { choice: number } | { value: string }) {
     if (!st || !isUnlocked(st.station)) return;
     const station = st.station;
     setBusy(true);
     try {
-      const next = await api.answer(st.code, station.id, choice);
+      const next = await api.answer(st.code, station.id, a);
       setSt(next);
       if (next.answer) go({ name: "result", station, answer: next.answer });
       else go({ name: "play" });
@@ -198,7 +198,7 @@ export function Game() {
   if (view.name === "code") {
     return (
       <CodeView
-        code={st.code} kc={st.kc}
+        code={st.code}
         onContinue={() => {
           const t = takePending();
           if (t) doUnlock(st, t);
@@ -220,7 +220,7 @@ export function Game() {
   if (st.arrived && !st.taskDone) {
     return <TaskView st={st} msg={msg} busy={busy} onToken={onToken} />;
   }
-  if (st.arrived && isUnlocked(st.station) && !st.station.final) {
+  if (st.arrived && isUnlocked(st.station)) {
     return (
       <StationView
         key={st.station.id} st={st} station={st.station} config={config}

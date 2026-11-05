@@ -1,5 +1,5 @@
 // Tvary odpovědí API ze server/server.js a server/game.js.
-// Body, Kč a pořadí počítá server – frontend je jen zobrazuje.
+// Body a pořadí počítá server – frontend je jen zobrazuje.
 
 export type MetricKey = "f" | "v" | "p";
 export const METRIC_KEYS: MetricKey[] = ["f", "v", "p"];
@@ -11,14 +11,13 @@ export interface MetricInfo {
   name: string;
   profile: string;
   color: string;
-  text: string;
 }
 
 // GET /api/config
 export interface Config {
   stations: { id: string; place: string; title: string; final: boolean }[];
   metrics: Record<MetricKey, MetricInfo>;
-  startKc: number;
+  startMetric: number; // body, se kterými začíná každá metrika
   routeLength: number;
   bands: { min: number; t: string }[];
   publicUrl: string | null; // PUBLIC_URL ze serveru (např. https://dodvscht.me)
@@ -46,6 +45,7 @@ export interface PublicStation extends StationStub {
   story: string;
   q: string;
   opts: StationOption[];
+  input: { unit: string } | null; // otevřená otázka – hráč píše číslo místo A/B/C
   group: { id: Group; name: string; why: string } | null;
 }
 
@@ -56,20 +56,18 @@ export interface Answer {
   choiceText: string;
   result: string;
   fx: Metrics;
-  kc: number;
   correct: boolean | null;
   quiz: boolean;
 }
 
 export interface FinalResult {
   score: number;
-  kc: number;
   metrics: Metrics;
   rank: number;
   of: number;
-  categories: Record<MetricKey, { value: number; rank: number }>;
+  categories: Record<MetricKey, { value: number; rank: number; text: string }>;
   band: { t: string; d: string };
-  profile: { id: MetricKey; name: string; text: string };
+  profile: { id: MetricKey; name: string };
 }
 
 // POST /api/register, GET /api/me/:code, POST /api/unlock, POST /api/answer
@@ -81,7 +79,6 @@ export interface Progress {
   taskDone: boolean;
   finished: boolean;
   metrics: Metrics;
-  kc: number;
   group: Group | null;
   route: { id: string; place: string }[];
   station: StationStub | PublicStation;
@@ -95,7 +92,6 @@ export interface LeaderRow {
   rank: number;
   name: string;
   score: number;
-  kc: number;
   metrics: Metrics;
   profile: string;
 }
@@ -115,7 +111,6 @@ export interface AdminRow {
   stationsDone: number;
   group: Group | null;
   metrics: Metrics;
-  kc: number;
   score: number;
   profile: MetricKey;
   profileName: string;

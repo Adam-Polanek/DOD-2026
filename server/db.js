@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 //  Datová vrstva nad vestavěnou SQLite (Node 22+). Žádné nativní závislosti.
 //  Ukládají se jen „fakta": kdo hraje, která stanoviště odemkl a co zvolil.
-//  Peníze a typ hráče se z toho počítají v game.js.
+//  Body, trasa a typ hráče se z toho počítají v game.js.
 // ---------------------------------------------------------------------------
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
@@ -35,12 +35,14 @@ db.exec(`
     PRIMARY KEY (code, station_id, kind)
   );
   -- Volby hráče. Na každém stanovišti platí jen PRVNÍ volba (pojistka proti
-  -- opakování). success = výsledek podnikání (1/0), u ostatních NULL.
+  -- opakování). value = napsané číslo u otevřené otázky, u ostatních NULL.
+  -- (success = zbytek starého konceptu s podnikáním, nepoužívá se.)
   CREATE TABLE IF NOT EXISTS choices (
     code        TEXT NOT NULL,
     station_id  TEXT NOT NULL,
     choice      INTEGER NOT NULL,
     success     INTEGER,
+    value       REAL,
     created_at  TEXT NOT NULL,
     PRIMARY KEY (code, station_id)
   );
@@ -53,6 +55,11 @@ db.exec(`
     created_at  TEXT NOT NULL
   );
 `);
+
+// Starší databáze (i ta na Azure) sloupec value ještě nemá – doplnit.
+if (!db.prepare("PRAGMA table_info(choices)").all().some((c) => c.name === "value")) {
+  db.exec("ALTER TABLE choices ADD COLUMN value REAL");
+}
 
 const nowIso = () => new Date().toISOString();
 
@@ -101,21 +108,20 @@ export function getUnlocks(code) {
 
 // ---- Volby -----------------------------------------------------------------
 const stmtInsertChoice = db.prepare(`
-  INSERT OR IGNORE INTO choices (code, station_id, choice, success, created_at)
+  INSERT OR IGNORE INTO choices (code, station_id, choice, value, created_at)
   VALUES (?, ?, ?, ?, ?)
 `);
-const stmtGetChoices = db.prepare("SELECT station_id, choice, success FROM choices WHERE code = ?");
+const stmtGetChoices = db.prepare("SELECT station_id, choice, value FROM choices WHERE code = ?");
 
 // Vrací true, pokud se volba uložila poprvé.
-export function addChoice(code, stationId, choice, success) {
-  const s = success == null ? null : success ? 1 : 0;
-  return stmtInsertChoice.run(code, stationId, choice, s, nowIso()).changes > 0;
+export function addChoice(code, stationId, choice, value = null) {
+  return stmtInsertChoice.run(code, stationId, choice, value, nowIso()).changes > 0;
 }
-// Vrací { s1: { choice, success }, … }
+// Vrací { s1: { choice, value }, … }
 export function getChoices(code) {
   const out = {};
   for (const r of stmtGetChoices.all(code)) {
-    out[r.station_id] = { choice: r.choice, success: r.success == null ? null : !!r.success };
+    out[r.station_id] = { choice: r.choice, value: r.value };
   }
   return out;
 }

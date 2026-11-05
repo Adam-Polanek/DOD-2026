@@ -1,11 +1,10 @@
-import { fmtKc } from "@/lib/format";
 import { Button } from "../Button";
 import { CodeCard } from "../CodeCard";
 import { Screen } from "./Screen";
 import styles from "./game.module.css";
 
 // Hned po startu: hráč si opíše/vyfotí kód, se kterým hru obnoví.
-export function CodeView({ code, kc, onContinue }: { code: string; kc: number; onContinue: () => void }) {
+export function CodeView({ code, onContinue }: { code: string; onContinue: () => void }) {
   return (
     <Screen
       top={{ left: "VŠCHT · DOD 2026", right: code }}
@@ -17,8 +16,7 @@ export function CodeView({ code, kc, onContinue }: { code: string; kc: number; o
         <p className="lead">Vyfoť si ho. Kdyby se ti zavřel prohlížeč, hru s ním obnovíš.</p>
       </div>
       <CodeCard big label="Hrací kód" value={code} />
-      <CodeCard inline label="Startovní úspory" value={fmtKc(kc)} />
-      <p className="lead">Naspořeno máš od rodičů a z letní brigády. Na každém stanovišti tě čeká kus příběhu a jedno rozhodnutí.</p>
+      <p className="lead">Na každém stanovišti tě čeká kus příběhu a jedno rozhodnutí. Finance, vzdělání i požitky začínají na 10 bodech.</p>
     </Screen>
   );
 }

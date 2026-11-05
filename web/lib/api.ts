@@ -30,8 +30,9 @@ export const getConfig = () => request<Config>("/api/config");
 export const register = (nickname: string) => post<Progress>("/api/register", { nickname });
 export const getMe = (code: string) => request<Progress>("/api/me/" + encodeURIComponent(code));
 export const unlock = (code: string, token: string) => post<Progress>("/api/unlock", { code, token });
-export const answer = (code: string, station: string, choice: number) =>
-  post<Progress>("/api/answer", { code, station, choice });
+// Odpověď je index možnosti (A/B/C), nebo napsané číslo u otevřené otázky.
+export const answer = (code: string, station: string, a: { choice: number } | { value: string }) =>
+  post<Progress>("/api/answer", { code, station, ...a });
 export const sendFeedback = (
   code: string,
   fb: { rating: number | null; recommend: string; best: string; improve: string },

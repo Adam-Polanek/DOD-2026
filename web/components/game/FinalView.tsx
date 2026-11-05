@@ -1,6 +1,6 @@
 import type { Config, FinalResult, Progress } from "@/lib/types";
 import { METRIC_KEYS } from "@/lib/types";
-import { fmtKc, signed } from "@/lib/format";
+import { fmtNum } from "@/lib/format";
 import { Button } from "../Button";
 import { Chip } from "../Chip";
 import { MetricBreakdown, type BreakdownRow } from "../MetricBreakdown";
@@ -25,16 +25,9 @@ export function FinalView({ st, result: r, config, busy, onRefresh, onNewGame }:
     label: config.metrics[k].name,
     color: config.metrics[k].color,
     pct: rankPct(r.categories[k].rank, r.of),
-    value: signed(r.metrics[k]),
+    value: fmtNum(r.metrics[k]),
     note: `${r.categories[k].rank}. místo z ${r.of}`,
   }));
-  rows.push({
-    label: "Úspory",
-    color: "var(--ink)",
-    pct: Math.max(0, r.kc) / (2 * config.startKc),
-    value: fmtKc(r.kc),
-    note: r.kc < 0 ? "Studium jsi zakončil/a v dluhu." : `Začínal/a jsi s ${fmtKc(config.startKc)}`,
-  });
 
   return (
     <Screen top={{ left: "Cíl · DOX", right: st.code }}>
@@ -51,11 +44,15 @@ export function FinalView({ st, result: r, config, busy, onRefresh, onNewGame }:
 
       <MetricBreakdown rows={rows} />
 
-      <div className={`${styles.card} ${styles.cardInk}`}>
-        <span className="label">Tvůj profil</span>
-        <h3>{r.profile.name}</h3>
-        <p className="muted">{r.profile.text}</p>
-      </div>
+      {/* Vyhodnocení každé oblasti podle konečných bodů (texty od týmu). */}
+      {METRIC_KEYS.map((k) => (
+        <div key={k} className={`${styles.card} ${styles.cardInk}`}>
+          <span className="label" style={{ color: config.metrics[k].color }}>
+            {config.metrics[k].name} · {fmtNum(r.metrics[k])} bodů
+          </span>
+          <p className="muted">{r.categories[k].text}</p>
+        </div>
+      ))}
 
       <div className={styles.redCard}>
         <b>Ukaž tuhle obrazovku v cíli</b>
