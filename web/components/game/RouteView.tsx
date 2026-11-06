@@ -50,7 +50,7 @@ function RouteMap({ st }: { st: Progress }) {
         return (
           <li key={r.id + i} className={styles[state]}>
             <span className={styles.num}>{pad2(i + 1)}</span>
-            <span>{hidden ? "Podle tvých bodů" : r.place}</span>
+            <span>{hidden ? "Podle tvé volby" : r.place}</span>
             <span className={styles.state}>{state === "done" ? "hotovo" : state === "cur" ? "teď" : "zamčeno"}</span>
           </li>
         );

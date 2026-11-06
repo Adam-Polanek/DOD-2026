@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------
 import { createHmac } from "node:crypto";
 import {
-  STATIONS, START_METRIC, ERASMUS_MIN_V, ROUTES, SELECTION_INFO,
+  STATIONS, START_METRIC, ROUTES,
   METRICS, SCORE, BANDS,
 } from "./questions.js";
 
@@ -95,7 +95,6 @@ export function publicStations() {
 // ale s informací, které možnosti má zamčené.
 export function publicStation(st, num, S) {
   const c = stationContent(st, S.group) || {};
-  const selected = S.m.v >= ERASMUS_MIN_V;
   return {
     id: st.id, num, place: st.place, title: st.title, final: num === ROUTE_LENGTH,
     task: !!st.task, taskText: st.taskText ?? "",
@@ -105,7 +104,6 @@ export function publicStation(st, num, S) {
       return { t: o.t, locked: !!why, lockText: why };
     }),
     input: c.input ? { unit: c.input.unit } : null,
-    group: st.selection ? { id: selected ? "erasmus" : "doma", ...SELECTION_INFO[selected ? "in" : "out"] } : null,
   };
 }
 

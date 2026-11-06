@@ -111,22 +111,6 @@
   border: var(--border);
 }
 
-.darkCard {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 17px;
-  background: var(--ink);
-  color: #fff;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-red);
-}
-
-.darkCard b {
-  font-size: 19px;
-  color: var(--salmon);
-}
-
 .redCard {
   display: flex;
   flex-direction: column;

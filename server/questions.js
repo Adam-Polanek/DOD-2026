@@ -31,12 +31,6 @@
 
 export const START_METRIC = 10;
 
-// Výběrové řízení na Erasmus (stanoviště 6): komise hledí na vzdělání.
-// Kdo nemá aspoň ERASMUS_MIN_V, má možnosti A a B zamčené a zbývá mu C (zůstat doma).
-// Dražší země (A) navíc potřebuje finance aspoň START_METRIC – doplácí se z úspor.
-// Při náhodných odpovědích projde výběrem asi 60 % hráčů.
-export const ERASMUS_MIN_V = 12;
-
 // Spořicí účet (Banka) – stejné vyhodnocení pro obě trasy.
 // 10 000 Kč × 2,5 % = 250 Kč úrok, daň 15 % = 37,50 Kč → 10 212,50 Kč ÷ 1,05 = 9 726 Kč.
 const SAVINGS = {
@@ -141,17 +135,17 @@ export const STATIONS = [
         r: "Zbyla ti spousta času na kamarády a občas sis něco přivydělal/a. Za chvíli se ale začneš ucházet o práci a ostatní uchazeči budou mít pravděpodobně náskok se zkušenostmi i kontakty." },
     ] },
 
-  // Výběrko: podle vzdělání (ERASMUS_MIN_V) jsou A a B volné, nebo zamčené.
+  // O trase rozhodne jen volba hráče (6. 11.):
   // A, B → trasa „erasmus“ (Banka, pak Kanceláře), C → trasa „doma“ (Kanceláře, pak Banka).
-  { id: "s6", place: "Přístav", title: "Erasmus", selection: true,
+  { id: "s6", place: "Přístav", title: "Erasmus",
     story: "Máš možnost vyjet na semestr do zahraničí s grantem Erasmus+.",
     q: "Využiješ nabídku?",
     opts: [
       { t: "Ano – vyberu dražší zemi, 70 % nákladů mi pokryje grant, zbytek doplatím z úspor.",
-        fx: { f: -2, v: 2, p: 3 }, needs: { v: ERASMUS_MIN_V, f: START_METRIC }, switchTo: "erasmus",
+        fx: { f: -2, v: 2, p: 3 }, switchTo: "erasmus",
         r: "Semestr na zahraniční univerzitě ti přinese nové kontakty, zkušenosti a zdokonalíš se v jazyce. V životopise bude vynikat. Ubyde ale z úspor a po návratu budeš muset šetřit." },
       { t: "Ano – vyberu levnější zemi, kde nebudu muset doplácet nic z úspor. Na partnerské škole pravděpodobně nebude moc předmětů z mého oboru.",
-        fx: { f: -1, v: 1, p: 2 }, needs: { v: ERASMUS_MIN_V }, switchTo: "erasmus",
+        fx: { f: -1, v: 1, p: 2 }, switchTo: "erasmus",
         r: "Máš v životopise zahraniční zkušenost a nebudeš se muset uskromňovat po návratu. Všechny předměty ti ale na škole neuznají a budeš muset dohnat několik zkoušek." },
       { t: "Nepojedu, semestr strávím doma. Všechny předměty tak dokončím včas a budu stíhat práci na částečný úvazek.",
         fx: { f: 3, p: -2 }, switchTo: "doma",
@@ -163,11 +157,11 @@ export const STATIONS = [
     variants: {
       erasmus: {
         story: "Rok před odjezdem na Erasmus jsi začal/a šetřit, protože grant nepřijde hned první den. Na začátku máš na spořicím účtu 10 000 Kč, úročených sazbou 2,5 % p. a. Inflace za rok je 5 %.",
-        q: "Jakou reálnou hodnotu budou tyto tvoje úspory mít na konci roku?",
+        q: "Jakou reálnou hodnotu budou tyto tvoje úspory mít na konci roku? Nezapomeň na srážkovou daň.",
         input: SAVINGS },
       doma: {
         story: "Zvolil/a jsi dlouhodobou brigádu při studiu a daří se ti každý měsíc část příjmu odkládat na spořicí účet. Pro snadný výpočet použijme částku 10 000 Kč. Ta je na spořicím účtu úročena sazbou 2,5 % p. a. Inflace za rok bude 5 %.",
-        q: "Jakou reálnou hodnotu budou tyto tvoje úspory mít na konci roku?",
+        q: "Jakou reálnou hodnotu budou tyto tvoje úspory mít na konci roku? Nezapomeň na srážkovou daň.",
         input: SAVINGS },
     } },
 
@@ -183,14 +177,13 @@ export const STATIONS = [
         opts: JOB_OPTS("Na půl roku se vydám cestovat z úspor, teď nebudu práci řešit.") },
     } },
 
-  // Stanoviště je až po státnicích, proto příběh jako ohlédnutí za prvákem (upraveno 5. 11.).
   { id: "s9", place: "Park", title: "Rozpočet na semestr",
-    story: "Ohlédnutí za prvákem: měsíčně jsi měl/a k dispozici kapesné 6 000 Kč a kamarádi pořád někam vyráželi.",
-    q: "Jak jsi s kapesným naložil/a?",
+    story: "Měsíčně máš k dispozici kapesné 6 000 Kč. Kamarádi pořád někam vyráží.",
+    q: "Jak s kapesným naložíš?",
     opts: [
       { t: "Chci užít akce s kamarády, kdyžtak zavolám rodičům a kapesné se nějak vyřeší.",
         fx: { f: -2, v: -1, p: 3 },
-        r: "Prvák byl plný nových zážitků! V polovině měsíce ti ale pravidelně začaly docházet finance, kvůli brigádám jsi nestíhal/a učení na zkoušky a musel/a je opakovat, občas ti půjčili kamarádi. Takhle snadno spadneš do dluhů." },
+        r: "Semestr byl plný nových zážitků! V polovině měsíce ti ale pravidelně začaly docházet finance, kvůli brigádám jsi nestíhal/a učení na zkoušky a musel/a je opakovat, občas ti půjčili kamarádi. Takhle snadno spadneš do dluhů." },
       { t: "Odložím si na pravidelné spoření, pak zaplatím nutné výdaje a zbyde mi i na nějaký výlet s kamarády, ale občas jim budu muset říct ne.",
         fx: { f: 2, v: 1, p: -1 },
         r: "Pokud se ti povede pravidelně odložit např. 1 500 Kč, máš ročně ušetřeno 18 000 Kč. Taková částka ti už může pomoci dosáhnout na kauci, až budeš řešit bydlení po škole. Stále si užiješ čas s přáteli a naučíš se hospodařit s měsíčním rozpočtem, což oceníš, až přijde první výplata." },
@@ -222,14 +215,6 @@ export const STATIONS = [
 export const ROUTES = {
   erasmus: ["s1", "s2", "s5", "s3", "s4", "s6", "s7", "s8", "s9", "s10"],
   doma:    ["s1", "s2", "s5", "s3", "s4", "s6", "s8", "s7", "s9", "s10"],
-};
-
-// Výsledek výběrka – ukáže se na stanovišti 6 nad otázkou.
-export const SELECTION_INFO = {
-  in:  { name: "Výběrová komise tě vybrala!",
-         why: "Komise hodnotí hlavně studijní výsledky a ty jsi do vzdělání investoval/a dost. Teď je jen na tobě, jestli pojedeš." },
-  out: { name: "Na výběrko to tentokrát nestačilo",
-         why: `Komise hledí hlavně na studijní výsledky – potřebuješ aspoň ${ERASMUS_MIN_V} bodů vzdělání. Semestr strávíš v Praze.` },
 };
 
 // ---- Vyhodnocení -------------------------------------------------------------

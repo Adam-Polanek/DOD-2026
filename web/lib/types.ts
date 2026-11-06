@@ -46,7 +46,6 @@ export interface PublicStation extends StationStub {
   q: string;
   opts: StationOption[];
   input: { unit: string } | null; // otevřená otázka – hráč píše číslo místo A/B/C
-  group: { id: Group; name: string; why: string } | null;
 }
 
 // Výsledek poslední volby (game.replay → last).

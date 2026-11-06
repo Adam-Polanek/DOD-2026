@@ -89,13 +89,13 @@ kvůli tomu měnit nemusí. Jedna odpověď vypadá takhle:
 { t: "Kolej – 5 000 Kč měsíčně za dvoulůžkový pokoj…",   // text odpovědi
   fx: { f: 1, v: 1, p: 1 },   // body: f finance, v vzdělání, p požitky
   r: "Rychle si najdeš kamarády…",   // co se stalo (ukáže se po odpovědi)
-  needs: { v: 12 },           // nepovinné: podmínka, jinak je možnost zamčená
+  needs: { v: 12 },           // nepovinné: podmínka, jinak je možnost zamčená (teď nikde)
 },
 ```
 
 - Stanoviště s jiným textem pro skupinu Erasmus a doma má `variants: { erasmus: {…}, doma: {…} }`.
 - Otevřená otázka (hráč píše číslo) má místo `opts` pole `input` s rozsahy – viz Banka.
-- Na Erasmus hráče pustí `ERASMUS_MIN_V` bodů vzdělání; trasu určí jeho volba na Přístavu (`switchTo`).
+- Trasu určí jen volba na Přístavu (`switchTo`): A/B → Erasmus, C → doma.
 - Texty vyhodnocení (podle bodů v každé oblasti) jsou v `METRICS` u každé metriky (`eval`).
 - ID stanovišť (`s1`–`s10`) **neměnit** – podle nich jsou vytištěné QR. Pořadí trasy je v `ROUTES`.
 

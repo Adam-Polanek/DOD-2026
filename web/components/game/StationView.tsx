@@ -44,12 +44,6 @@ export function StationView({ st, station, config, msg, busy, onAnswer }: {
         <h2>{station.title}</h2>
       </div>
       <Alert>{msg}</Alert>
-      {station.group && (
-        <div className={styles.darkCard}>
-          <b>{station.group.name}</b>
-          <span>{station.group.why}</span>
-        </div>
-      )}
       <p className="lead">{station.story}</p>
       <h3>{station.q}</h3>
       {input ? (
