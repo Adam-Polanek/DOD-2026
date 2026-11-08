@@ -85,7 +85,7 @@ function progress(p) {
     finished: !!p.finished_at,
     metrics: S.m,                    // { f, v, p } – finance, vzdělání, požitky
     group: S.group,                  // null / "erasmus" / "doma"
-    route: S.route.map((id) => ({ id, place: BY_ID[id].place })),
+    route: S.route.map((id) => ({ id, place: BY_ID[id].place, title: BY_ID[id].title })),
     // Dokud hráč nenaskenuje QR, vidí jen kam má jít, ne otázku.
     station: arrived
       ? game.publicStation(st, idx + 1, S)
@@ -180,11 +180,11 @@ app.post("/api/unlock", (req, res) => {
   const idx = before.route.findIndex((r) => r.id === found.station.id);
   const next = before.route[before.current];
   if (idx < before.current) {
-    return res.json({ ...before, notice: `${found.station.place}: tohle stanoviště už máš hotové.` });
+    return res.json({ ...before, notice: `${found.station.title}: tohle stanoviště už máš hotové.` });
   }
   if (idx > before.current) {
     return res.status(409).json({
-      error: `Tohle je ${found.station.place}. Teď tě čeká stanoviště ${before.current + 1}: ${next.place}.`,
+      error: `Tohle je stanoviště „${found.station.title}“. Teď tě čeká stanoviště ${before.current + 1}: ${next.title}.`,
     });
   }
   if (found.kind === "task" && !before.arrived) {
@@ -205,7 +205,7 @@ app.post("/api/answer", (req, res) => {
 
   if (now.finished) return res.status(409).json({ error: "Hru už máš dohranou.", ...now });
   if (req.body?.station !== st.id) {
-    return res.status(409).json({ error: `Teď odpovídáš na stanovišti ${now.current + 1}: ${st.place}.`, ...now });
+    return res.status(409).json({ error: `Teď odpovídáš na stanovišti ${now.current + 1}: ${st.title}.`, ...now });
   }
   if (!now.arrived) return res.status(409).json({ error: "Nejdřív naskenuj QR kód na stanovišti." });
   if (!now.taskDone) return res.status(409).json({ error: "Nejdřív splň úkol a nech si od obsluhy naskenovat QR kód." });

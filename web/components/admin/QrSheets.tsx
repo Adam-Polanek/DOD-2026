@@ -67,7 +67,7 @@ export function QrSheets({ token }: { token: string }) {
               <span>Den otevřených dveří</span>
             </div>
             {c.kind === "task" && <span className={styles.kind}>QR pro obsluhu – úkol splněn</span>}
-            <div className={styles.num}>{c.num}</div>
+            <div className={styles.sheetNum}>{c.num}</div>
             <div className={styles.place}>{c.title}</div>
             <QrCode text={c.url} className={styles.sheetQr} label={`QR kód: ${c.num}. ${c.title}`} />
             <div className={styles.code}>{c.token}</div>

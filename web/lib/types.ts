@@ -79,7 +79,7 @@ export interface Progress {
   finished: boolean;
   metrics: Metrics;
   group: Group | null;
-  route: { id: string; place: string }[];
+  route: { id: string; place: string; title: string }[];
   station: StationStub | PublicStation;
   result: FinalResult | null;
   notice?: string;

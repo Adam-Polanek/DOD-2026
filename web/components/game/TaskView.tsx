@@ -18,7 +18,7 @@ export function TaskView({ st, msg, busy, onToken }: {
   return (
     <Screen top={{ left: `Stanoviště ${pad2(s.num)} / ${pad2(st.route.length)}`, right: st.code }}>
       <div className={styles.titleBlock}>
-        <span className="eyebrow">{s.place}</span>
+        <span className="eyebrow">Úkol na stanovišti</span>
         <h2>{s.title}</h2>
       </div>
       <Alert>{msg}</Alert>

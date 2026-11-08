@@ -24,7 +24,7 @@ export function RouteView({ st, msg, info, busy, onToken }: {
     <Screen top={{ left: `Stanoviště ${pad2(st.current + 1)} / ${pad2(total)}`, right: st.code }}>
       <div className={styles.titleBlock}>
         <span className="eyebrow">{st.current === 0 ? "První zastávka" : "Další zastávka"}</span>
-        <h2>{next.place}</h2>
+        <h2>{next.title}</h2>
         <p className="lead">Najdi ceduli s QR kódem a namiř na ni fotoaparát.</p>
       </div>
       <Alert kind={info ? "info" : "error"}>{msg}</Alert>
@@ -50,7 +50,7 @@ function RouteMap({ st }: { st: Progress }) {
         return (
           <li key={r.id + i} className={styles[state]}>
             <span className={styles.num}>{pad2(i + 1)}</span>
-            <span>{hidden ? "Podle tvé volby" : r.place}</span>
+            <span>{hidden ? "Podle tvé volby" : r.title}</span>
             <span className={styles.state}>{state === "done" ? "hotovo" : state === "cur" ? "teď" : "zamčeno"}</span>
           </li>
         );

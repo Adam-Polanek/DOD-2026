@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Config, Progress, PublicStation } from "@/lib/types";
-import { letter } from "@/lib/format";
+import { letter, pad2 } from "@/lib/format";
 import { Alert } from "../Alert";
 import { Button } from "../Button";
 import { MetricHud } from "../MetricHud";
@@ -40,7 +40,7 @@ export function StationView({ st, station, config, msg, busy, onAnswer }: {
       <StationProgress total={st.route.length} current={st.current} />
       <MetricHud metrics={st.metrics} config={config} />
       <div className={styles.titleBlock}>
-        <span className="eyebrow">{station.place}</span>
+        <span className="eyebrow">Stanoviště {pad2(station.num)}</span>
         <h2>{station.title}</h2>
       </div>
       <Alert>{msg}</Alert>

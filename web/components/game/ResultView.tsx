@@ -22,7 +22,7 @@ export function ResultView({ st, station, answer, config, onContinue }: {
       top={{ left: "Výsledek měření", right: `${pad2(station.num)} / ${pad2(total)}` }}
       actions={
         <>
-          {next && <span className="label">Další: {nextNum} · {next.place}</span>}
+          {next && <span className="label">Další: {nextNum} · {next.title}</span>}
           <Button arrow="→" onClick={onContinue}>
             {next ? `Pokračovat na stanoviště ${nextNum}` : "Zobrazit vyhodnocení"}
           </Button>

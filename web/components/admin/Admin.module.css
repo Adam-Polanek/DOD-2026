@@ -259,7 +259,7 @@
   width: auto;
 }
 
-.num {
+.sheetNum {
   display: grid;
   place-items: center;
   min-width: 64px;
@@ -355,7 +355,7 @@
   .logo {
     height: 16mm;
   }
-  .num {
+  .sheetNum {
     min-width: 26mm;
     height: 26mm;
     padding: 0 7mm;
