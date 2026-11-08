@@ -18,6 +18,8 @@ declare global {
   }
 }
 
+const SCAN_PX = 480; // velikost výřezu pro jsQR – stačí na QR z ruky, a je rychlá
+
 async function makeDetector(video: HTMLVideoElement): Promise<() => Promise<string | null>> {
   const BD = window.BarcodeDetector;
   if (BD && (await BD.getSupportedFormats()).includes("qr_code")) {
@@ -27,12 +29,17 @@ async function makeDetector(video: HTMLVideoElement): Promise<() => Promise<stri
   const jsQR = (await import("jsqr")).default;
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  // jsQR běží v hlavním vlákně – celý snímek ve Full HD trval na iPhonu stovky ms
+  // a obraz se zasekával. Proto čte jen střed snímku (kde je rámeček) zmenšený na SCAN_PX.
   return async () => {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    if (!canvas.width) return null;
-    ctx.drawImage(video, 0, 0);
-    return jsQR(ctx.getImageData(0, 0, canvas.width, canvas.height).data, canvas.width, canvas.height)?.data ?? null;
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw) return null;
+    const side = Math.min(vw, vh) * 0.8;
+    const size = Math.min(SCAN_PX, Math.round(side));
+    canvas.width = canvas.height = size;
+    ctx.drawImage(video, (vw - side) / 2, (vh - side) / 2, side, side, 0, 0, size, size);
+    const img = ctx.getImageData(0, 0, size, size);
+    return jsQR(img.data, size, size, { inversionAttempts: "dontInvert" })?.data ?? null;
   };
 }
 
@@ -71,9 +78,9 @@ export function QrScanner({ onCode, autoStart }: { onCode: (text: string) => voi
       }
       setStatus("starting");
       try {
-        // Vyšší rozlišení = čtečka přečte i menší nebo vzdálenější QR (např. na monitoru).
+        // 1280×720 stačí na QR na papíře a starší telefony s ním nezamrzají (Full HD je zpomalovalo).
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+          video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: false,
         });
         if (stopped) return;

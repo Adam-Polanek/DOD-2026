@@ -6,7 +6,6 @@ import type { AdminBoard } from "@/lib/types";
 import { time } from "@/lib/format";
 import { Alert } from "../Alert";
 import { Button, ButtonLink } from "../Button";
-import { SMILEYS } from "../game/Feedback";
 import styles from "./Admin.module.css";
 
 const REFRESH_MS = 20000;
@@ -100,31 +99,6 @@ export function Overview({ token, initial }: { token: string; initial: AdminBoar
             </div>
           ))}
         </div>
-      </section>
-
-      <section className={styles.card}>
-        <h3>Hodnocení hry</h3>
-        <div className={styles.stats}>
-          {SMILEYS.map((s, i) => (
-            <div key={s.value} className={styles.stat}>
-              <b>{s.emoji} {d.feedback.counts[i]}</b>
-              <span>{s.label}</span>
-            </div>
-          ))}
-        </div>
-        {d.feedback.comments.length === 0 ? (
-          <p className="muted">Zatím žádné vzkazy.</p>
-        ) : (
-          <ul className={styles.comments}>
-            {d.feedback.comments.map((c) => (
-              <li key={c.code}>
-                <span aria-hidden="true">{SMILEYS[c.rating - 1]?.emoji}</span>
-                <p>{c.comment}</p>
-                <span className="label">{c.nickname ?? c.code} · {time(c.created_at)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </section>
 
       <section className={styles.card}>

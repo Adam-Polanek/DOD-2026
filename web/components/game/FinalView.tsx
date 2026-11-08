@@ -56,7 +56,7 @@ export function FinalView({ st, result: r, config, busy, onRefresh, onNewGame }:
 
       <div className={styles.redCard}>
         <b>Ukaž tuhle obrazovku v cíli</b>
-        <span>Ceny dostane celkově nejlepší hráč a nejlepší v každé oblasti. Pořadí se mění, jak dobíhají další hráči.</span>
+        <span>Pořadí se mění, jak dobíhají další hráči.</span>
       </div>
 
       <Button arrow="↓" onClick={() => document.getElementById("feedback")?.scrollIntoView({ behavior: "smooth" })}>
