@@ -117,6 +117,10 @@ export interface AdminRow {
 
 export interface AdminBoard {
   board: AdminRow[];
+  feedback: {
+    counts: number[]; // [nelíbilo, ušlo to, líbilo]
+    comments: { code: string; nickname: string | null; rating: number; comment: string; created_at: string }[];
+  };
   stations: Config["stations"];
   defaultSecrets: { admin: boolean; qr: boolean };
   stats: { total: number; finished: number };

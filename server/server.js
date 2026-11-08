@@ -235,13 +235,10 @@ app.post("/api/answer", (req, res) => {
 app.post("/api/feedback", (req, res) => {
   const p = requireParticipant(req, res);
   if (!p) return;
-  const { rating, recommend, best, improve } = req.body || {};
-  store.saveFeedback(p.code, {
-    rating: rating != null ? Number(rating) : null,
-    recommend: (recommend || "").toString().slice(0, 40),
-    best: (best || "").toString().slice(0, 500),
-    improve: (improve || "").toString().slice(0, 500),
-  });
+  const rating = Number(req.body?.rating);
+  if (![1, 2, 3].includes(rating)) return res.status(400).json({ error: "Vyber smajlíka." });
+  const comment = (req.body?.comment || "").toString().trim().slice(0, 500);
+  store.saveFeedback(p.code, { rating, comment });
   res.json({ ok: true });
 });
 
@@ -280,8 +277,14 @@ function allResults() {
 app.get("/api/admin/leaderboard", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const board = allResults();
+  const nick = Object.fromEntries(board.map((r) => [r.code, r.nickname]));
+  const fb = store.allFeedback();
   res.json({
     board,
+    feedback: {
+      counts: [1, 2, 3].map((n) => fb.filter((f) => f.rating === n).length),
+      comments: fb.filter((f) => f.comment).map((f) => ({ ...f, nickname: nick[f.code] ?? null })),
+    },
     stations: game.publicStations(),
     defaultSecrets: DEFAULT_SECRETS,
     stats: { total: board.length, finished: board.filter((r) => r.finished_at).length },
@@ -325,13 +328,16 @@ app.post("/api/admin/hide-nickname", (req, res) => {
 app.get("/api/admin/export.csv", (req, res) => {
   if (!requireAdmin(req, res)) return;
   const head = ["poradi", "kod", "prezdivka", "skore", "finance", "vzdelani", "pozitky",
-    "profil", "skupina", "stanovist", "start", "dokonceno"];
+    "profil", "skupina", "stanovist", "start", "dokonceno", "hodnoceni", "vzkaz"];
   const csv = [head.join(";")];
+  const fb = Object.fromEntries(store.allFeedback().map((f) => [f.code, f]));
+  const RATING = { 1: "nelíbilo", 2: "ušlo to", 3: "líbilo" };
   allResults().forEach((r, i) => {
     csv.push([
       r.finished_at ? i + 1 : "", r.code, (r.nickname || "").replace(/;/g, ","), r.score,
       r.metrics.f, r.metrics.v, r.metrics.p, r.profileName, r.group ?? "", r.stationsDone,
       r.created_at, r.finished_at || "",
+      RATING[fb[r.code]?.rating] ?? "", (fb[r.code]?.comment || "").replace(/[;\r\n]+/g, " "),
     ].join(";"));
   });
   res.setHeader("Content-Type", "text/csv; charset=utf-8");

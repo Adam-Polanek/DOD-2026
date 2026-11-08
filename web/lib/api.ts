@@ -35,7 +35,7 @@ export const answer = (code: string, station: string, a: { choice: number } | { 
   post<Progress>("/api/answer", { code, station, ...a });
 export const sendFeedback = (
   code: string,
-  fb: { rating: number | null; recommend: string; best: string; improve: string },
+  fb: { rating: number; comment: string },
 ) => post<{ ok: true }>("/api/feedback", { code, ...fb });
 export const getLeaderboard = () => request<Leaderboard>("/api/leaderboard");
 

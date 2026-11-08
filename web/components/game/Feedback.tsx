@@ -6,25 +6,29 @@ import { Alert } from "../Alert";
 import { Button } from "../Button";
 import styles from "./game.module.css";
 
-const RECOMMEND = ["Ano", "Možná", "Ne"];
+// Hodnota 1–3 se ukládá na server, popisek čte čtečka obrazovky.
+export const SMILEYS = [
+  { value: 1, emoji: "🙁", label: "Nelíbila" },
+  { value: 2, emoji: "😐", label: "Ušla" },
+  { value: 3, emoji: "😀", label: "Líbila" },
+];
 
-// Hodnocení hry v cíli → POST /api/feedback.
+// Hodnocení hry v cíli → POST /api/feedback. Smajlík povinný, vzkaz ne.
 export function Feedback({ code }: { code: string }) {
   const key = "dodFeedback:" + code;
   const [sent, setSent] = useState(() => !!storeGet(key));
   const [rating, setRating] = useState<number | null>(null);
-  const [recommend, setRecommend] = useState("");
-  const [best, setBest] = useState("");
-  const [improve, setImprove] = useState("");
+  const [comment, setComment] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (rating === null) return;
     setBusy(true);
     setError("");
     try {
-      await sendFeedback(code, { rating, recommend, best, improve });
+      await sendFeedback(code, { rating, comment });
       storeSet(key, "1");
       setSent(true);
     } catch (err) {
@@ -43,30 +47,23 @@ export function Feedback({ code }: { code: string }) {
         <form onSubmit={submit} className={styles.titleBlock} style={{ gap: 14 }}>
           <div className={styles.field}>
             <span>Jak se ti hra líbila?</span>
-            <div className={styles.scale} role="group" aria-label="Hodnocení 1 až 5">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} type="button" aria-pressed={rating === n} onClick={() => setRating(n)}>{n}</button>
+            <div className={`${styles.scale} ${styles.smileys}`} role="group" aria-label="Jak se ti hra líbila?">
+              {SMILEYS.map((s) => (
+                <button key={s.value} type="button" aria-pressed={rating === s.value} aria-label={s.label}
+                  onClick={() => setRating(s.value)}>
+                  <span aria-hidden="true">{s.emoji}</span>
+                  <small>{s.label}</small>
+                </button>
               ))}
             </div>
           </div>
           <div className={styles.field}>
-            <span>Doporučil/a bys hru kamarádům?</span>
-            <div className={`${styles.scale} ${styles.scaleWords}`} role="group" aria-label="Doporučení">
-              {RECOMMEND.map((r) => (
-                <button key={r} type="button" aria-pressed={recommend === r} onClick={() => setRecommend(r)}>{r}</button>
-              ))}
-            </div>
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="fbBest">Co se ti líbilo nejvíc?</label>
-            <textarea id="fbBest" className="input" maxLength={500} value={best} onChange={(e) => setBest(e.target.value)} />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="fbImprove">Co bychom měli zlepšit?</label>
-            <textarea id="fbImprove" className="input" maxLength={500} value={improve} onChange={(e) => setImprove(e.target.value)} />
+            <label htmlFor="fbComment">Chceš nám něco vzkázat? <span className="muted">(nepovinné)</span></label>
+            <textarea id="fbComment" className="input" maxLength={500} value={comment}
+              placeholder="Co se ti líbilo, co bychom měli zlepšit…" onChange={(e) => setComment(e.target.value)} />
           </div>
           <Alert>{error}</Alert>
-          <Button type="submit" variant="dark" arrow="→" disabled={busy || (rating === null && !recommend && !best && !improve)}>
+          <Button type="submit" variant="dark" arrow="→" disabled={busy || rating === null}>
             Odeslat hodnocení
           </Button>
         </form>

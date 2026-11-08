@@ -255,3 +255,20 @@
   font-family: var(--font);
   font-size: 15px;
 }
+.smileys button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 72px;
+  font-family: var(--font);
+}
+.smileys button span {
+  font-size: 30px;
+  line-height: 1;
+}
+.smileys button small {
+  font-size: 12px;
+  font-weight: 600;
+}

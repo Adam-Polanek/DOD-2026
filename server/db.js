@@ -134,8 +134,14 @@ const stmtUpsertFeedback = db.prepare(`
     rating=excluded.rating, recommend=excluded.recommend,
     best=excluded.best, improve=excluded.improve, created_at=excluded.created_at
 `);
-export function saveFeedback(code, { rating, recommend, best, improve }) {
-  stmtUpsertFeedback.run(code, rating ?? null, recommend ?? null, best ?? null, improve ?? null, nowIso());
+// Od 8. 11.: rating 1–3 (smajlíky) a nepovinný vzkaz, ten se ukládá do sloupce improve.
+// Sloupce recommend a best zůstávají kvůli starším databázím, nové hodnocení je nechá prázdné.
+export function saveFeedback(code, { rating, comment }) {
+  stmtUpsertFeedback.run(code, rating, null, null, comment || null, nowIso());
+}
+const stmtAllFeedback = db.prepare("SELECT code, rating, improve AS comment, created_at FROM feedback ORDER BY created_at DESC");
+export function allFeedback() {
+  return stmtAllFeedback.all();
 }
 
 // ---- Smazání všech dat (před akcí) ------------------------------------------
