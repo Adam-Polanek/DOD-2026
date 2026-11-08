@@ -254,13 +254,23 @@
 }
 
 .logo {
-  padding: 3px 8px;
-  border: 1.5px solid var(--ink);
-  border-radius: 4px;
-  font-family: var(--font);
-  font-size: 13px;
+  display: block;
+  height: 28px;
+  width: auto;
+}
+
+.num {
+  display: grid;
+  place-items: center;
+  min-width: 64px;
+  height: 64px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 32px;
   font-weight: 800;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.02em;
 }
 
 .kind {
@@ -279,10 +289,6 @@
   font-weight: 800;
   line-height: 1.05;
   letter-spacing: -0.03em;
-}
-
-.placeTitle {
-  color: var(--muted);
 }
 
 .sheetQr {
@@ -344,19 +350,26 @@
     break-after: auto;
   }
   .sheetBrand {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    margin-bottom: auto;
+  }
+  .logo {
+    height: 16mm;
+  }
+  .num {
+    min-width: 26mm;
+    height: 26mm;
+    padding: 0 7mm;
+    font-size: 44pt;
+    /* černý kruh vytiskne i prohlížeč, který jinak pozadí netiskne */
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
   .place {
-    font-size: 40pt;
-  }
-  .placeTitle {
-    font-size: 18pt;
+    font-size: 34pt;
+    max-width: 180mm;
   }
   .sheetQr {
-    max-width: 125mm;
+    max-width: 110mm;
   }
   .code {
     font-size: 36pt;
@@ -364,6 +377,7 @@
   .how {
     font-size: 13pt;
     max-width: 150mm;
+    margin-bottom: auto; /* spolu s .sheetBrand vycentruje obsah pod logem */
   }
 }
 

@@ -53,8 +53,8 @@ export function QrSheets({ token }: { token: string }) {
           </div>
         )}
         <p className="muted">
-          QR jsou podle <b>míst</b>, ne čísel – některá místa mají číslo podle trasy hráče. Pod každým QR je kód
-          k opsání.
+          Na listu je číslo a název stanoviště. Banka a Kancelářské budovy mají číslo podle trasy hráče (7 / 8). Pod
+          každým QR je kód k opsání.
         </p>
       </div>
 
@@ -62,13 +62,14 @@ export function QrSheets({ token }: { token: string }) {
         {d.codes.map((c) => (
           <section key={c.token} className={styles.sheet}>
             <div className={styles.sheetBrand}>
-              <span className={styles.logo}>VŠCHT</span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- statický export, logo jen k tisku */}
+              <img src="/logo-vscht.png" alt="VŠCHT Praha" className={styles.logo} />
               <span>Den otevřených dveří</span>
             </div>
             {c.kind === "task" && <span className={styles.kind}>QR pro obsluhu – úkol splněn</span>}
-            <div className={styles.place}>{c.place}</div>
-            <div className={styles.placeTitle}>{c.title}</div>
-            <QrCode text={c.url} className={styles.sheetQr} label={`QR kód: ${c.place}`} />
+            <div className={styles.num}>{c.num}</div>
+            <div className={styles.place}>{c.title}</div>
+            <QrCode text={c.url} className={styles.sheetQr} label={`QR kód: ${c.num}. ${c.title}`} />
             <div className={styles.code}>{c.token}</div>
             <p className={styles.how}>
               Naskenuj ve hře, nebo fotoaparátem mobilu. Nejde to? Opiš kód do hry.

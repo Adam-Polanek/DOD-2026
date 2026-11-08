@@ -127,7 +127,7 @@ export interface QrCodes {
   base: string;
   publicUrl: boolean;
   defaultSecret: boolean;
-  codes: { id: string; place: string; title: string; kind: "arrive" | "task"; token: string; url: string }[];
+  codes: { id: string; num: string; place: string; title: string; kind: "arrive" | "task"; token: string; url: string }[];
 }
 
 // Stanoviště je odemčené, když má otázku (ne jen místo a název).

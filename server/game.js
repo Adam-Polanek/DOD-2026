@@ -42,12 +42,15 @@ export function findToken(token) {
 
 // Seznam všech QR kódů pro organizátory (tisk). Čísla stanovišť se u Banky
 // a Kanceláří liší podle trasy, proto se tisknou jména míst.
+// num = číslo stanoviště na trase; Banka a Kanceláře mají podle trasy 7, nebo 8 („7 / 8“).
 export function allTokens() {
   return STATIONS.flatMap((st) => {
-    const rows = [{ id: st.id, place: st.place, title: st.title, kind: "arrive", token: qrToken(st.id, "arrive") }];
-    if (st.task) rows.push({ id: st.id, place: st.place, title: st.title, kind: "task", token: qrToken(st.id, "task") });
+    const nums = [...new Set(Object.values(ROUTES).map((r) => r.indexOf(st.id) + 1))].sort((a, b) => a - b);
+    const base = { id: st.id, num: nums.join(" / "), place: st.place, title: st.title };
+    const rows = [{ ...base, kind: "arrive", token: qrToken(st.id, "arrive") }];
+    if (st.task) rows.push({ ...base, kind: "task", token: qrToken(st.id, "task") });
     return rows;
-  });
+  }).sort((a, b) => parseInt(a.num) - parseInt(b.num));
 }
 
 // ---- Trasa a varianty ------------------------------------------------------
