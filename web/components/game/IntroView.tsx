@@ -77,7 +77,7 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
         </p>
       </div>
 
-      <CodeCard label="Tvůj anonymní kód" value={<span className="muted">DOD-····</span>} aside="~35 min" />
+      <CodeCard label="Tvůj anonymní kód" value={<span className="muted">DOD-····</span>} aside="~25 min" />
       {!pendingQr && restore}
     </Screen>
   );
