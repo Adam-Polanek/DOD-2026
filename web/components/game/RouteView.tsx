@@ -40,17 +40,14 @@ export function RouteView({ st, msg, info, busy, onToken }: {
 }
 
 function RouteMap({ st }: { st: Progress }) {
-  const total = st.route.length;
   return (
     <ol className={styles.route}>
       {st.route.map((r, i) => {
         const state = i < st.current ? "done" : i === st.current ? "cur" : "locked";
-        // Za rozdělením (Erasmus / doma) se pořadí liší – dokud hráč neví, kam jde, nevidí ho.
-        const hidden = state === "locked" && !st.group && i > 5 && i < total - 2;
         return (
           <li key={r.id + i} className={styles[state]}>
             <span className={styles.num}>{pad2(i + 1)}</span>
-            <span>{hidden ? "Podle tvé volby" : r.title}</span>
+            <span>{r.title}</span>
             <span className={styles.state}>{state === "done" ? "hotovo" : state === "cur" ? "teď" : "zamčeno"}</span>
           </li>
         );

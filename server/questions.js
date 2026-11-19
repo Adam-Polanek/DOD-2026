@@ -211,10 +211,11 @@ export const STATIONS = [
 
 // ---- Trasa -------------------------------------------------------------------
 // Pořadí stanovišť pro každou skupinu (id stanovišť = vytištěné QR, NEMĚNIT).
-// Do Erasmu (s6) je trasa stejná; o skupině rozhodne volba na s6 (switchTo).
+// Obě skupiny jdou stejně jako na mapě (19. 11.: i „doma“ Banka 7, Kanceláře 8);
+// skupina (volba na s6, switchTo) mění jen texty stanovišť s variantami.
 export const ROUTES = {
   erasmus: ["s1", "s2", "s5", "s3", "s4", "s6", "s7", "s8", "s9", "s10"],
-  doma:    ["s1", "s2", "s5", "s3", "s4", "s6", "s8", "s7", "s9", "s10"],
+  doma:    ["s1", "s2", "s5", "s3", "s4", "s6", "s7", "s8", "s9", "s10"],
 };
 
 // ---- Vyhodnocení -------------------------------------------------------------

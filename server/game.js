@@ -40,9 +40,8 @@ export function findToken(token) {
   return null;
 }
 
-// Seznam všech QR kódů pro organizátory (tisk). Čísla stanovišť se u Banky
-// a Kanceláří liší podle trasy, proto se tisknou jména míst.
-// num = číslo stanoviště na trase; Banka a Kanceláře mají podle trasy 7, nebo 8 („7 / 8“).
+// Seznam všech QR kódů pro organizátory (tisk).
+// num = číslo stanoviště na trase (kdyby se trasy skupin lišily, bylo by např. „7 / 8“).
 export function allTokens() {
   return STATIONS.flatMap((st) => {
     const nums = [...new Set(Object.values(ROUTES).map((r) => r.indexOf(st.id) + 1))].sort((a, b) => a - b);

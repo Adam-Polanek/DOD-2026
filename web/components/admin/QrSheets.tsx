@@ -53,7 +53,7 @@ export function QrSheets({ token }: { token: string }) {
           </div>
         )}
         <p className="muted">
-          Na listu je číslo a název stanoviště. Banka a Kancelářské budovy mají číslo podle trasy hráče (7 / 8). Pod
+          Na listu je číslo a název stanoviště. Pod
           každým QR je kód k opsání.
         </p>
       </div>

@@ -55,8 +55,8 @@ export function FinalView({ st, result: r, config, busy, onRefresh, onNewGame }:
       ))}
 
       <div className={styles.redCard}>
-        <b>Ukaž tuhle obrazovku v cíli</b>
-        <span>Pořadí se mění, jak dobíhají další hráči.</span>
+        <b>Hraješ o ceny!</b>
+        <span>Výherce vybereme náhodným losováním až na konci akce. Ukaž tuhle obrazovku v cíli.</span>
       </div>
 
       <Button arrow="↓" onClick={() => document.getElementById("feedback")?.scrollIntoView({ behavior: "smooth" })}>
