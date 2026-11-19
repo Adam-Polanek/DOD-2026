@@ -52,8 +52,8 @@ export function IntroView({ config, msg, pendingQr, busy, onStart, onRestore }: 
         <h1>Studium na VŠCHT jako experiment</h1>
         <p className="lead">
           Projdi {config.routeLength} stanovišť, na každém naskenuj QR kód a rozhodni se. Uvidíš, jak tvoje volby
-          promění finance, vzdělání i požitky. V půlce se podle tvé volby trasa rozdělí: Erasmus,
-          nebo doma.
+          promění finance, vzdělání i požitky. V půlce se rozhodneš: Erasmus, nebo zůstaneš doma.
+          Podle toho se změní tvůj příběh.
         </p>
       </div>
       <div className={styles.chips}>

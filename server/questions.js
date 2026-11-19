@@ -136,7 +136,7 @@ export const STATIONS = [
     ] },
 
   // O trase rozhodne jen volba hráče (6. 11.):
-  // A, B → trasa „erasmus“ (Banka, pak Kanceláře), C → trasa „doma“ (Kanceláře, pak Banka).
+  // A, B → skupina „erasmus“, C → „doma“ (pořadí trasy je stejné, liší se texty).
   { id: "s6", place: "Přístav", title: "Erasmus",
     story: "Máš možnost vyjet na semestr do zahraničí s grantem Erasmus+.",
     q: "Využiješ nabídku?",
@@ -152,7 +152,7 @@ export const STATIONS = [
         r: "Nebudeš muset řešit prodlužování studia a dosáhneš na slušné úspory. Spolužáci budou ale mít lepší angličtinu, zážitky a kontakty na celý život. Možná už se podobná příležitost neobjeví." },
     ] },
 
-  // Banka a Kanceláře: trasa „erasmus“ jde nejdřív do Banky, „doma“ nejdřív do Kanceláří.
+  // Banka a Kanceláře mají pro každou skupinu jiný text (pořadí 7 Banka, 8 Kanceláře).
   { id: "s7", place: "Banka", title: "Spořicí účet",
     variants: {
       erasmus: {
